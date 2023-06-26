@@ -5,11 +5,12 @@
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://github.com/saulo-chaves/ProbSup/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/saulo-chaves/ProbBreed/actions/workflows/R-CMD-check.yaml)
-[![Build
-status](https://ci.appveyor.com/api/projects/status/eeu30dhkhiper85g?svg=true)](https://ci.appveyor.com/project/saulo-chaves/probbreed)
 [![Lifecycle:
 stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
+[![CRAN
+status](https://www.r-pkg.org/badges/version/ProbBreed)](https://CRAN.R-project.org/package=ProbBreed)
+[![ProbBreed status
+badge](https://saulo-chaves.r-universe.dev/badges/ProbBreed)](https://saulo-chaves.r-universe.dev/ProbBreed)
 <!-- badges: end -->
 
 ProbBreed employs Bayesian statistics to analyse multi-environment
@@ -21,8 +22,15 @@ performance. The method is thoroughly described at
 
 ## Installation
 
-You can install the development version of ProbBreed from
-[GitHub](https://github.com/) with:
+You can install the CRAN version of `ProbBreed` using the following
+command:
+
+``` r
+install.packages("ProbBreed")
+```
+
+Alternatively, you can install the development version of `ProbBreed`
+from [GitHub](https://github.com/saulo-chaves/ProbBreed) with:
 
 ``` r
 # install.packages("devtools")
@@ -48,9 +56,11 @@ mod = bayes_met(data = soy,
 outs = extr_outs(data = soy, trait = "Y", gen = "Gen", model = mod,
                  effects = c('l','g','gl','m','gm'),
                  nenv = length(unique(soy$Env)),
-                 probs = c(0.05, 0.95), check.stan.diag = TRUE)
+                 probs = c(0.05, 0.95), check.stan.diag = FALSE, 
+                 verbose = TRUE)
 
 results = prob_sup(data = soy, trait = "Y", gen = "Gen", env = "Env",
                    mod.output = outs, reg = 'Reg', int = .2,
-                   increase = T, save.df = T, interactive = T)
+                   increase = TRUE, save.df = FALSE, interactive = FALSE, 
+                   verbose = TRUE)
 ```

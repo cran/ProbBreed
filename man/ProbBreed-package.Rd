@@ -12,6 +12,8 @@ Use probability theory under the Bayesian framework for calculating the risk of 
 Useful links:
 \itemize{
   \item \url{https://github.com/saulo-chaves/ProbBreed}
+  \item \url{https://saulo-chaves.github.io/ProbBreed_site/}
+  \item Report bugs at \url{https://github.com/saulo-chaves/ProbBreed/issues}
 }
 
 }
@@ -21,7 +23,7 @@ Useful links:
 Authors:
 \itemize{
   \item Kaio Dias \email{kaio.o.dias@ufv.br} (\href{https://orcid.org/0000-0002-9171-1021}{ORCID}) [copyright holder]
-  \item Matheus Krause \email{mdkrause@iastate.edu} (\href{https://orcid.org/0000-0002-9171-1021}{ORCID})
+  \item Matheus Krause \email{mdkrause@iastate.edu} (\href{https://orcid.org/0000-0003-2411-9287}{ORCID})
 }
 
 }
