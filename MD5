@@ -1,12 +1,13 @@
-e3e10baef5b6a50376dbee149099ae2c *DESCRIPTION
-30702619f392e3fafb2b5e414bc8fabb *NAMESPACE
+7cdf069a339096ef111707b276424c14 *DESCRIPTION
+63e40a33ce6aa1d6667e9f80dff8917b *NAMESPACE
 95f8f22188d3d4dcff5eccb871b13a66 *NEWS.md
 d7a54580ba6b0c63cf4b2782267b6f43 *R/ProbBreed-package.R
 81d95df3031ad2f096df80a5f187f47d *R/bayes_met.R
 78aa9d2512ef0cd80fd9584ff418aac9 *R/extr_outs.R
-c23929e30d119ca0e7887ab7fcbc943d *R/prob_sup.R
+6c5c2017cf243efe95bda09fa579e370 *R/prob_sup.R
+f2ddbd3457b39962af14909f12e6b07e *R/recod.R
 dc572527b0fa1919e7ed2a4eb210cd66 *R/soy.R
-946c590ec462c6afcdc8b265e8ba1f6a *README.md
+a06efd31223fdb7f74f3011a2577cd08 *README.md
 cdbdb705c017565f8d24cdc91a0e6ec8 *build/partial.rdb
 ea652d3f7ef80762938ac34d7acf86f5 *data/soy.rda
 f9852203a2b59e4e50cc6e1a59741376 *man/ProbBreed-package.Rd
@@ -21,4 +22,5 @@ c3978703d8f40f2679795335715e98f4 *man/figures/lifecycle-experimental.svg
 53b3f893324260b737b3c46ed2a0e643 *man/figures/lifecycle-stable.svg
 1c1fe7a759b86dc6dbcbe7797ab8246c *man/figures/lifecycle-superseded.svg
 3bf844c4c35ae58539ba21692fbd559c *man/prob_sup.Rd
+6797e3f1bc802f0f6e11733b70c211b6 *man/recod.Rd
 a6a2817dd2fa804598509de7a6f430a2 *man/soy.Rd
