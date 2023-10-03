@@ -34,23 +34,10 @@ from [GitHub](https://github.com/saulo-chaves/ProbBreed) with:
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("saulo-chaves/ProbBreed", build_vignettes = T)
+devtools::install_github("saulo-chaves/ProbBreed")
 ```
 
 ## Usage
-
-If the levels of the factors (Genotype, Environment and Region) in your
-dataset are not alphanumeric, you can use the `recod` function to recode
-it:
-
-``` r
-toy = data.frame(
-  gen = rep(1:5, each =4),
-  env = rep(1:4, times = 5),
-  y = rnorm(20, mean = 20, sd = 5)
-)
-new.toy = recod(toy, name.fact = 'gen', cod = 'G')
-```
 
 A basic workflow using the available data is:
 
@@ -61,19 +48,19 @@ mod = bayes_met(data = soy,
                 gen = "Gen",
                 env = "Env",
                 repl = NULL,
+                year = NULL,
                 reg = "Reg",
                 res.het = F,
                 trait = "Y",
-                iter = 2000, cores = 1, chains = 4)
+                iter = 2000, cores = 2, chains = 4)
 
-outs = extr_outs(data = soy, trait = "Y", gen = "Gen", model = mod,
-                 effects = c('l','g','gl','m','gm'),
-                 nenv = length(unique(soy$Env)),
-                 probs = c(0.05, 0.95), check.stan.diag = FALSE, 
+outs = extr_outs(data = soy, trait = "Y", model = mod,
+                 probs = c(0.05, 0.95),
+                 check.stan.diag = FALSE, 
                  verbose = TRUE)
 
 results = prob_sup(data = soy, trait = "Y", gen = "Gen", env = "Env",
-                   mod.output = outs, reg = 'Reg', int = .2,
+                   mod.output = outs, reg = 'Reg', year = NULL, int = .2,
                    increase = TRUE, save.df = FALSE, interactive = FALSE, 
                    verbose = TRUE)
 ```
