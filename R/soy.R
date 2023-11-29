@@ -3,7 +3,7 @@
 ##' This dataset belongs to the USDA Northern Region Uniform Soybean Tests,
 ##' and it is a subset of the data used by Krause et al. (2023). It contains the
 ##' empirical best linear unbiased estimates of genotypic means of the seed yield
-##' from 39 experimental genotypes evaluated in 14 environments across three
+##' from 39 experimental genotypes evaluated in 14 locations across three
 ##' regions or mega-environments. The original data, available at the package
 ##' `SoyURT`, has 4,257 experimental genotypes evaluated at 63 locations and
 ##' 31 years resulting in 591 location-year combinations (environments) with
@@ -12,7 +12,7 @@
 ##' @format ## `soy`
 ##'  A data frame with 823 rows and 6 columns:
 ##'  \describe{
-##'    \item{Env}{14 environments}
+##'    \item{Loc}{14 locations}
 ##'    \item{Reg}{Regions containing the evaluated environments: 1, 2 and 3}
 ##'    \item{Gen}{39 experimental genotypes}
 ##'    \item{Y}{435 EBLUEs (phenotypes)}

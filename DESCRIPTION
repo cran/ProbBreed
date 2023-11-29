@@ -1,6 +1,6 @@
 Package: ProbBreed
 Title: Probability Theory for Selecting Candidates in Plant Breeding
-Version: 1.0.3
+Version: 1.0.3.1
 Authors@R: c(person("Saulo", "Chaves", role = c("aut", "cre"),
                      email = "saulo.chaves@ufv.br",
                      comment = c(ORCID = "0000-0002-0694-1798")),
@@ -23,10 +23,10 @@ UseLTO: true
 NeedsCompilation: yes
 RoxygenNote: 7.2.3
 LazyData: true
-Packaged: 2023-10-03 16:09:53 UTC; saulo
+Packaged: 2023-11-29 15:56:58 UTC; saulo
 Author: Saulo Chaves [aut, cre] (<https://orcid.org/0000-0002-0694-1798>),
   Kaio Dias [aut, cph] (<https://orcid.org/0000-0002-9171-1021>),
   Matheus Krause [aut] (<https://orcid.org/0000-0003-2411-9287>)
 Maintainer: Saulo Chaves <saulo.chaves@ufv.br>
 Repository: CRAN
-Date/Publication: 2023-10-03 18:40:03 UTC
+Date/Publication: 2023-11-29 16:30:06 UTC
