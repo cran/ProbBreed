@@ -4,99 +4,43 @@
 ##'
 ##' @description
 ##' This function estimates the probabilities of superior performance and stability
-##' across environments (`marginal` output). It also computes the probabilities
-##' of superior performance within environments (`conditional` output).
+##' across environments, and probabilities of superior performance within environments.
 ##'
-##' @param data A data frame containing the phenotypic data
-##' @param trait,gen,loc A string. The name of the columns that correspond to
-##' the trait, genotype and location information, respectively. If
-##' the environment is a combination of other factors (for instance, location-year),
-##' the name of the column that contains this information must be attributed to `loc`.
-##' @param reg A string or NULL. If the dataset has information about regions,
-##' `reg` will be a string with the name of the column that corresponds to the
-##' region information. Otherwise, `reg = NULL` (default).
-##' @param year A string or NULL. If the data set has information about time-related
-##' environmental factors (years, seasons...), `year` will be a string with the
-##' name of the column that corresponds to the time information. Otherwise, `year = NULL` (default).
-##' @param mod.output An object from the [extr_outs()] function
-##' @param int A number representing the selection intensity
+##' @param extr An object of class `extr`, obtained from the [ProbBreed::extr_outs] function
+##' @param int A numeric representing the selection intensity
 ##' (between 0 and 1)
-##' @param increase Logical. Indicates the direction of the selection.
-##' `TRUE` (default) for increasing the trait value, `FALSE` otherwise.
+##' @param increase Logical.`TRUE` (default) if the selection is for increasing the trait value, `FALSE` otherwise.
 ##' @param save.df Logical. Should the data frames be saved in the work directory?
 ##' `TRUE` for saving, `FALSE` (default) otherwise.
-##' @param interactive Logical. Should ggplots be converted into interactive plots?
-##' If `TRUE`, the function loads the `plotly` package and uses the [plotly::ggplotly()]
-##' command.
 ##' @param verbose A logical value. If `TRUE`, the function will indicate the
 ##' completed steps. Defaults to `FALSE`.
 ##'
-##' @return The function returns two lists, one with the `marginal` probabilities, and
-##' another with the `conditional` probabilities.
+##' @return The function returns an object of class `probsup`, which contains two lists,
+##' one with the `across`-environments probabilities, and another with the `within`-environments probabilities.
 ##'
-##' The `marginal` list has:
+##' The `across` list has the following elements:
 ##' \itemize{
-##' \item \code{df} : A list of data frames containing the calculated probabilities:
-##' \itemize{
+##' \item \code{g_hpd}: Highest posterior density (HPD) of the posterior genotypic main effects.
 ##' \item \code{perfo}: the probabilities of superior performance.
 ##' \item \code{pair_perfo}: the pairwise probabilities of superior performance.
-##' \item \code{stabi}: the probabilities of superior stability. Can be `stabi_gl`,
-##' `stabi_gm` (when `reg` is not `NULL`) or `stabi_gt` (when `year` is not `NULL`).
-##' \item \code{pair_stabi}: the pairwise probabilities of superior stability.
-##' Can be `pair_stabi_gl`, `pair_stabi_gm` (when `reg` is not `NULL`) or
-##' `pair_stabi_gt` (when `year` is not `NULL`).
+##' \item \code{stabi}: a list with the probabilities of superior stability. It contains the data frames `gl`,
+##' `gm` (when `reg` is not `NULL`) and `gt` (when `year` is not `NULL`).
+##' \item \code{pair_stabi}: a list with the pairwise probabilities of superior stability. It contains the data frames `gl`,
+##' `gm` (when `reg` is not `NULL`) and `gt` (when `year` is not `NULL`).
 ##' \item \code{joint_prob}: the joint probabilities of superior performance and stability.
 ##' }
-##' \item \code{plot} : A list of ggplots illustrating the outputs:
-##' \itemize{
-##' \item \code{g_hpd}: a caterpillar plot representing the marginal genotypic value of
-##' each genotype, and their respective highest posterior density interval (95% represented by the
-##' thick line, and 97.5% represented by the thin line).
-##' \item \code{perfo}: a bar plot illustrating the probabilities of superior performance
-##' \item \code{pair_perfo}: a heatmap representing the pairwise probability of superior
-##' performance (the probability of genotypes at the \emph{x}-axis being superior
-##' to those on the \emph{y}-axis).
-##' \item \code{stabi}: a bar plot with the probabilities of superior stability.
-##' Different plots are generated for `stabi_gl`, `stabi_gm` and `stabi_gt` if `reg`
-##' or/and `year` are not `NULL`.
-##' \item \code{pair_stabi}: a heatmap with the pairwise probabilities of superior stability.
-##' Different plots are generated for `stabi_gl`, `stabi_gm` and `stabi_gt` if `reg`
-##' or/and `year` are not `NULL`. This plot represents
-##' the probability of genotypes at the \emph{x}-axis being superior
-##' to those on \emph{y}-axis.
-##' \item \code{joint_prob}: a plot with the probabilities of superior performance,
-##' probabilities of superior stability and the joint probabilities of superior
-##' performance and stability.
-##' }
-##' }
 ##'
-##' The `conditional` list has:
+##' The `within` list has the following elements:
 ##' \itemize{
-##' \item \code{df} : A list with:
-##' \itemize{
-##' \item \code{prob}: data frames containing the probabilities of superior performance
-##' within environments. Can be `prob_loc`, `prob_reg` (if `reg` is not `NULL`), and
-##' `prob_year` (if `year` is not `NULL`).
-##' \item \code{pwprob}: lists with the pairwise probabilities of superior performance
-##' within environments. Can be `pwprob_loc`, `pwprob_reg` (if `reg` is not `NULL`), and
-##' `pwprob_year` (if `year` is not `NULL`).
-##' }
-##' \item \code{plot} : A list with:
-##' \itemize{
-##' \item \code{prob}: heatmaps with the probabilities of superior performance within
-##' environments. Can be `prob_loc`, `prob_reg` (if `reg` is not `NULL`), and
-##' `prob_year` (if `year` is not `NULL`).
-##' \item \code{pwprob}: a list of heatmaps representing the pairwise probability of superior
-##' performance within environments. Can be `pwprob_loc`, `pwprob_reg` (if `reg` is not `NULL`), and
-##' `pwprob_year` (if `year` is not `NULL`). The interpretation is the same as in the
-##' `pair_perfo` in the `marginal` list: the probability of genotypes at the \emph{x}-axis being superior
-##' to those on \emph{y}-axis.
-##' }
+##' \item \code{perfo}: a list of data frames containing the probabilities of superior performance
+##' within locations (`gl`), regions (`gm`) and years (`gt`).
+##' \item \code{pair_perfo}: lists with the pairwise probabilities of superior performance
+##' within locations (`gl`), regions (`gm`) and years (`gt`).
 ##' }
 ##'
 ##' @details
 ##' Probabilities provide the risk of recommending a selection candidate for a target
-##' population of environments or for a specific environment. The function `prob_sup()`
+##' population of environments or for a specific environment. `prob_sup`
 ##' computes the probabilities of superior performance and the probabilities of superior stability:
 ##'
 ##' \itemize{\item Probability of superior performance}
@@ -104,32 +48,31 @@
 ##' Let \eqn{\Omega} represent the subset of selected genotypes based on their
 ##' performance across environments. A given genotype \eqn{j} will belong to \eqn{\Omega}
 ##' if its genotypic marginal value (\eqn{\hat{g}_j}) is high or low enough compared to
-##' its peers. `prob_sup()` leverages the Monte Carlo discretized sampling
+##' its peers. `prob_sup` leverages the Monte Carlo discretized sampling
 ##' from the posterior distribution to emulate the occurrence of \eqn{S} trials. Then,
 ##' the probability of the \eqn{j^{th}} genotype belonging to \eqn{\Omega} is the
 ##' ratio of success (\eqn{\hat{g}_j \in \Omega}) events and the total number of sampled events,
 ##' as follows:
 ##'
-##' \deqn{Pr(\hat{g}_j \in \Omega \vert y) = \frac{1}{S}\sum_{s=1}^S{I(\hat{g}_j^{(s)} \in \Omega \vert y)}}
+##' \deqn{Pr\left(\hat{g}_j \in \Omega \vert y \right) = \frac{1}{S}\sum_{s=1}^S{I\left(\hat{g}_j^{(s)} \in \Omega \vert y\right)}}
 ##'
-##' where \eqn{S} is the total number of samples (\eqn{s = 1, 2, ..., S}),
-##' and \eqn{I(g_j^{(s)} \in \Omega \vert y)} is an indicator variable that can assume
+##' where \eqn{S} is the total number of samples \eqn{\left(s = 1, 2, ..., S \right)},
+##' and \eqn{I\left(g_j^{(s)} \in \Omega \vert y\right)} is an indicator variable that can assume
 ##' two values: (1) if \eqn{\hat{g}_j^{(s)} \in \Omega} in the \eqn{s^{th}} sample,
 ##' and (0) otherwise. \eqn{S} is conditioned to the number of iterations and chains
-##' previously set at [ProbBreed::bayes_met()].
+##' previously set at [ProbBreed::bayes_met].
 ##'
-##' Similarly, the conditional probability of superior performance can be applied to
+##' Similarly, the within-environment probability of superior performance can be applied to
 ##' individual environments. Let \eqn{\Omega_k} represent the subset of superior
 ##' genotypes in the \eqn{k^{th}} environment, so that the probability of the
 ##' \eqn{j^{th} \in \Omega_k} can calculated as follows:
 ##'
-##' \deqn{Pr(\hat{g}_{jk} \in \Omega_k \vert y) = \frac{1}{S} \sum_{s=1}^S I(\hat{g}_{jk}^{(s)} \in \Omega_k \vert y)}
+##' \deqn{Pr\left(\hat{g}_{jk} \in \Omega_k \vert y\right) = \frac{1}{S} \sum_{s=1}^S I\left(\hat{g}_{jk}^{(s)} \in \Omega_k \vert y\right)}
 ##'
-##' where \eqn{I(\hat{g}_{jk}^{(s)} \in \Omega_k \vert y)} is an indicator variable
+##' where \eqn{I\left(\hat{g}_{jk}^{(s)} \in \Omega_k \vert y\right)} is an indicator variable
 ##' mapping success (1) if \eqn{\hat{g}_{jk}^{(s)}} exists in \eqn{\Omega_k}, and
 ##' failure (0) otherwise, and \eqn{\hat{g}_{jk}^{(s)} = \hat{g}_j^{(s)} + \widehat{ge}_{jk}^{(s)}}.
-##' Note that when computing conditional probabilities (i.e., conditional to the
-##' \eqn{k^{th}} environment or mega-environment), we are accounting for
+##' Note that when computing within-environment probabilities, we are accounting for
 ##' the interaction of the \eqn{j^{th}} genotype with the \eqn{k^{th}}
 ##' environment.
 ##'
@@ -138,11 +81,11 @@
 ##' genotype being superior to another experimental genotype or a commercial check.
 ##' The calculations are as follows, across and within environments, respectively:
 ##'
-##' \deqn{Pr(\hat{g}_{j} > \hat{g}_{j^\prime} \vert y) = \frac{1}{S} \sum_{s=1}^S I(\hat{g}_{j}^{(s)} > \hat{g}_{j^\prime}^{(s)} \vert y)}
+##' \deqn{Pr\left(\hat{g}_{j} > \hat{g}_{j^\prime} \vert y\right) = \frac{1}{S} \sum_{s=1}^S I\left(\hat{g}_{j}^{(s)} > \hat{g}_{j^\prime}^{(s)} \vert y\right)}
 ##'
 ##' or
 ##'
-##' \deqn{Pr(\hat{g}_{jk} > \hat{g}_{j^\prime k} \vert y) = \frac{1}{S} \sum_{s=1}^S I(\hat{g}_{jk}^{(s)} > \hat{g}_{j^\prime k}^{(s)} \vert y)}
+##' \deqn{Pr\left(\hat{g}_{jk} > \hat{g}_{j^\prime k} \vert y\right) = \frac{1}{S} \sum_{s=1}^S I\left(\hat{g}_{jk}^{(s)} > \hat{g}_{j^\prime k}^{(s)} \vert y\right)}
 ##'
 ##' These equations are set for when the selection direction is positive. If
 ##' `increase = FALSE`, \eqn{>} is simply switched by \eqn{<}.
@@ -150,21 +93,19 @@
 ##'
 ##' \itemize{\item Probability of superior stability}
 ##'
-##' Probabilities of superior performance highlight experimental genotypes with
-##' high agronomic stability. For ecological stability (invariance), the probability
-##' of superior stability is the more adequate. Making a direct analogy with the
-##' method of Shukla (1972), a stable genotype is the one that has a low variance
-##' of the GEI (genotype-by-environment interaction) effects \eqn{[var(\widehat{ge})]}.
+##' This probability makes a direct analogy with the
+##' method of Shukla (1972): a stable genotype is the one that has a low
+##' genotype-by-environment interaction variance \eqn{[var(\widehat{ge})]}.
 ##' Using the same probability principles previously described, the probability
 ##' of superior stability is given as follows:
 ##'
-##' \deqn{Pr[var(\widehat{ge}_{jk}) \in \Omega \vert y] = \frac{1}{S} \sum_{s=1}^S I[var(\widehat{ge}_{jk}^{(s)}) \in \Omega \vert y]}
+##' \deqn{Pr \left[var \left(\widehat{ge}_{jk}\right) \in \Omega \vert y \right] = \frac{1}{S} \sum_{s=1}^S I\left[var \left(\widehat{ge}_{jk}^{(s)} \right) \in \Omega \vert y \right]}
 ##'
-##' where \eqn{I[var(\widehat{ge}_{jk}^{(s)}) \in \Omega \vert y]} indicates if
-##' \eqn{var(\widehat{ge}_{jk}^{(s)})} exists in \eqn{\Omega} (1) or not (0).
+##' where \eqn{I\left[var \left(\widehat{ge}_{jk}^{(s)} \right) \in \Omega \vert y \right]} indicates if
+##' \eqn{var\left(\widehat{ge}_{jk}^{(s)}\right)} exists in \eqn{\Omega} (1) or not (0).
 ##' Pairwise probabilities of superior stability are also possible in this context:
 ##'
-##' \deqn{Pr[var(\widehat{ge}_{jk}) < var(\widehat{ge}_{j^\prime k}) \vert y] = \frac{1}{S} \sum_{s=1}^S I[var(\widehat{ge}_{jk})^{(s)} < var(\widehat{ge}_{j^\prime k})^{(s)} \vert y]}
+##' \deqn{Pr \left[var \left(\widehat{ge}_{jk} \right) < var\left(\widehat{ge}_{j^\prime k} \right) \vert y \right] = \frac{1}{S} \sum_{s=1}^S I \left[var \left(\widehat{ge}_{jk} \right)^{(s)} < var \left(\widehat{ge}_{j^\prime k} \right)^{(s)} \vert y \right]}
 ##'
 ##' Note that \eqn{j} will be superior to \eqn{j^\prime} if it has a \strong{lower}
 ##' variance of the genotype-by-environment interaction effect. This is true regardless
@@ -174,7 +115,7 @@
 ##' The estimated genotypic main effects and the variances of GEI effects are independent
 ##' by design, thus the joint probability of superior performance and stability as follows:
 ##'
-##' \deqn{Pr[\hat{g}_j \in \Omega \cap var(\widehat{ge}_{jk}) \in \Omega] = Pr(\hat{g}_j \in \Omega) \times Pr[var(\widehat{ge}_{jk}) \in \Omega]}
+##' \deqn{Pr \left[\hat{g}_j \in \Omega \cap var \left(\widehat{ge}_{jk} \right) \in \Omega \right] = Pr \left(\hat{g}_j \in \Omega \right) \times Pr \left[var \left(\widehat{ge}_{jk} \right) \in \Omega \right]}
 ##'
 ##' The estimation of these probabilities are strictly related to some key questions that
 ##' constantly arises in plant breeding:
@@ -210,69 +151,71 @@
 ##' @importFrom stats reshape median quantile na.exclude model.matrix aggregate
 ##' @importFrom rlang .data
 ##'
+##' @seealso [ProbBreed::plot.probsup]
+##'
 ##' @export
 ##'
 ##' @examples
 ##' \donttest{
-##' mod = bayes_met(data = maize,
-##'                 gen = "Hybrid",
-##'                 loc = "Location",
-##'                 repl = c("Rep", "Block"),
+##' mod = bayes_met(data = soy,
+##'                 gen = "Gen",
+##'                 loc = "Loc",
+##'                 repl = NULL,
 ##'                 year = NULL,
-##'                 reg = 'Region',
-##'                 res.het = FALSE,
-##'                 trait = 'GY',
+##'                 reg = NULL,
+##'                 res.het = TRUE,
+##'                 trait = 'Y',
 ##'                 iter = 6000, cores = 4, chains = 4)
 ##'
-##' outs = extr_outs(data = maize, trait = "GY", model = mod,
+##' outs = extr_outs(model = mod,
 ##'                  probs = c(0.05, 0.95),
-##'                  check.stan.diag = TRUE,
 ##'                  verbose = TRUE)
 ##'
-##' results = prob_sup(data = maize,
-##'                    trait = "GY",
-##'                    gen = "Hybrid",
-##'                    loc = "Location",
-##'                    reg = 'Region',
-##'                    year = NULL,
-##'                    mod.output = outs,
+##' results = prob_sup(extr = outs,
 ##'                    int = .2,
 ##'                    increase = TRUE,
 ##'                    save.df = FALSE,
-##'                    interactive = FALSE,
 ##'                    verbose = FALSE)
 ##' }
 ##'
 
-prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, int,
-                    increase = TRUE, save.df = FALSE, interactive = FALSE,
-                    verbose = FALSE){
+prob_sup = function(extr, int, increase = TRUE, save.df = FALSE, verbose = FALSE){
 
   stopifnot("Please, provide a valid selection intensity (number between 0 and 1)" = {
     is.numeric(int)
     int >= 0 & int <=1
   })
 
-  # Namespaces
-  requireNamespace('ggplot2')
-
   # Preparation
-  data = if(any(is.na(data[,trait]))) data[-which(is.na(data[,trait])),] else data
-  mod = mod.output
+  data = attr(extr, "data")
+  mod = extr
+  output = list(across = list(), within = list())
+  class(output) = "probsup"
+  declared = attr(extr, "declared")
+  trait = declared$trait
+  gen = declared$gen
+  loc = declared$loc
+  reg = declared$reg; if(reg == 0) reg = NULL
+  year = declared$year; if(year == 0) year = NULL
+  attr(output, "control") = data.frame(increase = increase, trait = trait, gen = gen,
+                                       loc = loc, reg = ifelse(is.null(reg), 0, reg),
+                                       year = ifelse(is.null(year), 0, year),
+                                       intensity = int)
+
 
   # Transforming again
-  names(mod$post)[which(names(mod$post) == 'location')] = "l"
-  names(mod$post)[which(names(mod$post) == 'genotype')] = "g"
-  names(mod$post)[which(names(mod$post) == 'gen.loc')] = "gl"
-  if("replicate" %in% names(mod$post)){names(mod$post)[which(names(mod$post) == 'replicate')] = "r"}
-  if("block" %in% names(mod$post)){names(mod$post)[which(names(mod$post) == 'block')] = "b"}
+  names(mod$post)[which(names(mod$post) == declared$loc)] = "l"
+  names(mod$post)[which(names(mod$post) == declared$gen)] = "g"
+  names(mod$post)[which(names(mod$post) == paste(declared$gen, declared$loc, sep = ':'))] = "gl"
+  if("replicate" %in% names(mod$post)){names(mod$post)[which(names(mod$post) == declared$repl)] = "r"}
+  if("block" %in% names(mod$post)){names(mod$post)[which(names(mod$post) == declared$blk)] = "b"}
   if("region" %in% names(mod$post)){
-    names(mod$post)[which(names(mod$post) == 'region')] = "m"
-    names(mod$post)[which(names(mod$post) == 'gen.reg')] = "gm"
+    names(mod$post)[which(names(mod$post) == declared$reg)] = "m"
+    names(mod$post)[which(names(mod$post) == paste(declared$gen, declared$reg, sep = ':'))] = "gm"
   }
   if("year" %in% names(mod$post)){
-    names(mod$post)[which(names(mod$post) == 'year')] = "t"
-    names(mod$post)[which(names(mod$post) == 'gen.year')] = "gt"
+    names(mod$post)[which(names(mod$post) == declared$year)] = "t"
+    names(mod$post)[which(names(mod$post) == paste(declared$gen, declared$year, sep = ':'))] = "gt"
   }
 
   # Conditions
@@ -310,25 +253,32 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
       aux = unique(data[,c(gen,loc,year,reg)])
       Z1 = stats::model.matrix(~-1 + aux[,gen])
       Z2 = stats::model.matrix(~-1 + aux[,gen]:aux[,loc])
+      if(any(colSums(Z2) == 0)){
+        mod$post$gl = mod$post$gl[,-which(colSums(Z2) == 0)]
+        Z2 = Z2[,-which(colSums(Z2) == 0)]
+      }
       Z3 = stats::model.matrix(~-1 + aux[,gen]:aux[,year])
+      if(any(colSums(Z3) == 0)){
+        mod$post$gt = mod$post$gt[,-which(colSums(Z3) == 0)]
+        Z3 = Z3[,-which(colSums(Z3) == 0)]
+      }
       Z4 = stats::model.matrix(~-1 + aux[,gen]:aux[,reg])
+      if(any(colSums(Z4) == 0)){
+        mod$post$gm = mod$post$gm[,-which(colSums(Z4) == 0)]
+        Z4 = Z4[,-which(colSums(Z4) == 0)]
+      }
 
       # Genotypic effects and their HPD ------------
       g_hpd = data.frame(
         gen = name.gen,
         g = apply(mod$post$g, 2, stats::median),
-        UP = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.95)),
-        up = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.975)),
-        DOWN = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.05)),
-        down = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.025)),
+        HPD95 = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.95)),
+        HPD97.5 = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.975)),
+        HPD5 = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.05)),
+        HPD7.5 = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.025)),
         row.names = NULL
       )
-
-      g_hpd = ggplot(data = g_hpd, aes(x = .data$g, y = reorder(.data$gen, .data$g))) +
-        geom_errorbar(aes(xmin = .data$down, xmax = .data$up), width = 0)+
-        geom_errorbar(aes(xmin = .data$DOWN, xmax = .data$UP), width = 0, linewidth = 2, alpha = .8) +
-        labs(x = 'Genotypic main effects (HPD)', y = 'Genotypes') +
-        geom_point(size = 4, color = '#33a02c')
+      output$across$g_hpd = g_hpd
 
 
       # Marginal probabilities ----------------
@@ -352,16 +302,10 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
       rownames(ind_post) = name.gen
       prob_g = data.frame(ID = rownames(ind_post), prob = rowMeans(ind_post), row.names = NULL)
       prob_g = prob_g[order(prob_g$prob, decreasing = T),]
-      prob_g.plot = ggplot(prob_g) +
-        geom_segment(aes(x = factor(.data$ID, levels = .data$ID), xend = .data$ID,
-                         y = 0, yend = .data$prob), linewidth = 1) +
-        geom_point(aes(x = factor(.data$ID, levels = .data$ID), y = .data$prob),
-                   size = 2, color = 'black', fill = alpha('#33a02c', 0.3),
-                   alpha = 0.7, shape = 21, stroke = .4) +
-        labs(x = 'Genotypes', y = 'Probability of superior performance') +
-        theme(axis.text.x = element_text(angle = 90)) # + ylim(0,1)
 
-      if(verbose) message('1. Probability of superior performance estimated')
+      if(verbose) message('-> Probability of superior performance estimated')
+
+      output$across$perfo = prob_g
 
       ord_gen = factor(prob_g$ID, levels = prob_g$ID)
 
@@ -384,66 +328,21 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
       }
 
       colnames(pwsprob_g) = rownames(pwsprob_g) = unlist(strsplit(rownames(pwsprob_g), split = '_@#'))
-      pwsprob_g1 = pwsprob_g[match(prob_g$ID, rownames(pwsprob_g)),
-                             match(prob_g$ID, rownames(pwsprob_g))]
-      pwsprob_g1[upper.tri(pwsprob_g1, diag = T)] = NA
-      pwsprob_g1 = stats::reshape(
-        data.frame(pwsprob_g1),
-        direction = 'long',
-        varying = list(colnames(data.frame(pwsprob_g1))),
-        idvar = 'y', timevar = 'x',
-        ids = rownames(pwsprob_g1), times = colnames(pwsprob_g1),
-        new.row.names = NULL, v.names = 'prob'
-      )
+      output$across$pair_perfo = pwsprob_g
 
-      if(increase){
-        pwsprob_g.plot = ggplot(pwsprob_g1,
-                                aes(x = factor(.data$x,
-                                               levels = unique(.data$x)),
-                                    y = factor(.data$y,
-                                               levels = unique(.data$y))))+
-          geom_tile(aes(fill = .data$prob), colour = 'white') +
-          labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] > g[y]))))+
-          theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-                legend.position = c(.8,.15), legend.direction = 'horizontal')+
-          scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                               option = 'turbo')+
-          guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
-                                       title.hjust = .5))
-      } else {
-        pwsprob_g.plot = ggplot(pwsprob_g1,
-                                aes(x = factor(.data$x,
-                                               levels = unique(.data$x)),
-                                    y = factor(.data$y,
-                                               levels = unique(.data$y))))+
-          geom_tile(aes(fill = .data$prob), colour = 'white') +
-          labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] < g[y]))))+
-          theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-                legend.position = c(.8,.15), legend.direction = 'horizontal')+
-          scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                               option = 'turbo')+
-          guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
-                                       title.hjust = .5))
-      }
-
-      pwsprob_g[upper.tri(pwsprob_g, diag = T)] = NA
-      pwsprob_g = stats::reshape(
-        data.frame(pwsprob_g),
-        direction = 'long',
-        varying = list(colnames(data.frame(pwsprob_g))),
-        idvar = 'y', timevar = 'x',
-        ids = rownames(pwsprob_g), times = colnames(pwsprob_g),
-        new.row.names = 1:length(c(pwsprob_g)), v.names = 'prob'
-      )
-      pwsprob_g = stats::na.exclude(pwsprob_g[order(pwsprob_g$x),])
-
-      if(verbose) message('2. Pairwise probability of superior performance estimated')
+      if(verbose) message('-> Pairwise probability of superior performance estimated')
 
       ## Probability of superior stability - Location -----------------
       staprob_gl = mod$post$gl
       colnames(staprob_gl) = sub(
         'Gen_@#','',do.call(rbind,strsplit(colnames(staprob_gl),'_@#loc'))[,1]
       )
+      if(any(table(colnames(staprob_gl)) == 1)){
+        oncegeno =  names(table(colnames(staprob_gl))[which(table(colnames(staprob_gl)) == 1)])
+        staprob_gl = staprob_gl[,-which(colnames(staprob_gl) %in% oncegeno)]
+        warning("Some genotypes were evaluated in only one location (environment), so we could not compute their stability: ",
+                paste(oncegeno, collapse = ", "))
+      }
       probsta = do.call(cbind, lapply(
         lapply(
           name.gen, function(x) staprob_gl[,grep(paste0(x,'$'), colnames(staprob_gl))]
@@ -458,16 +357,10 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
       rownames(ind_post) = name.gen
       prob_gl = data.frame(ID = rownames(ind_post), prob = rowMeans(ind_post), row.names = NULL)
       prob_gl = prob_gl[order(prob_gl$prob, decreasing = T),]
-      prob_gl.plot = ggplot(prob_gl)+
-        geom_segment(aes(x = factor(.data$ID, levels = .data$ID), xend = .data$ID,
-                         y = 0, yend = .data$prob), linewidth = 1) +
-        geom_point(aes(x = factor(.data$ID, levels = .data$ID), y = .data$prob),
-                   size = 2, color = 'black', fill = alpha('#33a02c', 0.3),
-                   alpha = 0.7, shape = 21, stroke = .4) +
-        labs(x = 'Genotypes', y = 'Probability of superior stability') +
-        theme(axis.text.x = element_text(angle = 90)) #+ ylim(0,1)
 
-      if(verbose) message('3. Probability of superior stability (GL) estimated')
+      output$across$stabi$gl = prob_gl
+
+      if(verbose) message('-> Probability of superior stability (GL) estimated')
 
       ## Pairwise probability of superior stability - Location -------------
       pwsprob_gl = matrix(NA, num.gen, num.gen,
@@ -477,47 +370,22 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
           pwsprob_gl[i,j] = mean(probsta[,j] < probsta[,i])
         }
       }
-      pwsprob_gl1 = pwsprob_gl[match(prob_gl$ID, rownames(pwsprob_gl)),
-                               match(prob_gl$ID, rownames(pwsprob_gl))]
-      pwsprob_gl1[upper.tri(pwsprob_gl1, diag = T)] = NA
-      pwsprob_gl1 = stats::reshape(
-        data.frame(pwsprob_gl1),
-        direction = 'long',
-        varying = list(colnames(data.frame(pwsprob_gl1))),
-        idvar = 'y', timevar = 'x',
-        ids = rownames(pwsprob_gl1), times = colnames(pwsprob_gl1),
-        new.row.names = NULL, v.names = 'prob'
-      )
-      pwsprob_gl.plot = ggplot(pwsprob_gl1,
-                               aes(x = factor(.data$x, levels = unique(.data$x)),
-                                   y = factor(.data$y, levels = unique(.data$y))))+
-        geom_tile(aes(fill = .data$prob), colour = 'white')+
-        labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold("Pr["~var(gl[x]) < var(gl[y])~"]")))+
-        theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-              legend.position = c(.8,.15), legend.direction = 'horizontal')+
-        scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                             option = 'turbo')+
-        guides(fill = guide_colorbar(barwidth = 9, barheight = 1.5, title.position = 'top',
-                                     title.hjust = .5))
 
-      pwsprob_gl[upper.tri(pwsprob_gl, diag = T)] = NA
-      pwsprob_gl = stats::reshape(
-        data.frame(pwsprob_gl),
-        direction = 'long',
-        varying = list(colnames(data.frame(pwsprob_gl))),
-        idvar = 'y', timevar = 'x',
-        ids = rownames(pwsprob_gl), times = colnames(pwsprob_gl),
-        new.row.names = 1:length(c(pwsprob_gl)), v.names = 'prob'
-      )
-      pwsprob_gl = stats::na.exclude(pwsprob_gl[order(pwsprob_gl$x),])
+      output$across$pair_stabi$gl = pwsprob_gl
 
-      if(verbose) message('4. Pairwise probability of superior stability (GL) estimated')
+      if(verbose) message('-> Pairwise probability of superior stability (GL) estimated')
 
       ## Probability of superior stability - Region --------------
       staprob_gm = mod$post$gm
       colnames(staprob_gm) = sub(
         'Gen_@#','',do.call(rbind,strsplit(colnames(staprob_gm),'_@#Reg'))[,1]
       )
+      if(any(table(colnames(staprob_gm)) == 1)){
+        oncegeno =  names(table(colnames(staprob_gm))[which(table(colnames(staprob_gm)) == 1)])
+        staprob_gm = staprob_gm[,-which(colnames(staprob_gm) %in% oncegeno)]
+        warning("Some genotypes were evaluated in only one region, so we could not compute their stability: ",
+                paste(oncegeno, collapse = ", "))
+      }
       probsta = do.call(cbind, lapply(
         lapply(
           name.gen, function(x) staprob_gm[,grep(paste0(x,'$'), colnames(staprob_gm))]
@@ -532,16 +400,10 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
       rownames(ind_post) = name.gen
       prob_gm = data.frame(ID = rownames(ind_post), prob = rowMeans(ind_post), row.names = NULL)
       prob_gm = prob_gm[order(prob_gm$prob, decreasing = T),]
-      prob_gm.plot = ggplot(prob_gm)+
-        geom_segment(aes(x = factor(.data$ID, levels = .data$ID), xend = .data$ID,
-                         y = 0, yend = .data$prob), linewidth = 1) +
-        geom_point(aes(x = factor(.data$ID, levels = .data$ID), y = .data$prob),
-                   size = 2, color = 'black', fill = alpha('#33a02c', 0.3),
-                   alpha = 0.7, shape = 21, stroke = .4) +
-        labs(x = 'Genotypes', y = 'Probability of superior stability') +
-        theme(axis.text.x = element_text(angle = 90)) #+ ylim(0,1)
 
-      if(verbose) message('5. Probability of superior stability (GM) estimated')
+      output$across$stabi$gm = prob_gm
+
+      if(verbose) message('-> Probability of superior stability (GM) estimated')
 
 
       ## Pairwise probability of superior stability - Region -----------------
@@ -552,47 +414,21 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
           pwsprob_gm[i,j] = mean(probsta[,j] < probsta[,i])
         }
       }
-      pwsprob_gm1 = pwsprob_gm[match(prob_gm$ID, rownames(pwsprob_gm)),
-                               match(prob_gm$ID, rownames(pwsprob_gm))]
-      pwsprob_gm1[upper.tri(pwsprob_gm1, diag = T)] = NA
-      pwsprob_gm1 = stats::reshape(
-        data.frame(pwsprob_gm1),
-        direction = 'long',
-        varying = list(colnames(data.frame(pwsprob_gm1))),
-        idvar = 'y', timevar = 'x',
-        ids = rownames(pwsprob_gm1), times = colnames(pwsprob_gm1),
-        new.row.names = NULL, v.names = 'prob'
-      )
-      pwsprob_gm.plot = ggplot(pwsprob_gm1,
-                               aes(x = factor(.data$x, levels = unique(.data$x)),
-                                   y = factor(.data$y, levels = unique(.data$y))))+
-        geom_tile(aes(fill = .data$prob), colour = 'white')+
-        labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold("Pr["~var(gm[x]) < var(gm[y])~"]")))+
-        theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-              legend.position = c(.8,.15), legend.direction = 'horizontal')+
-        scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                             option = 'turbo')+
-        guides(fill = guide_colorbar(barwidth = 9, barheight = 1.5, title.position = 'top',
-                                     title.hjust = .5))
+      output$across$pair_stabi$gm = pwsprob_gm
 
-      pwsprob_gm[upper.tri(pwsprob_gm, diag = T)] = NA
-      pwsprob_gm = stats::reshape(
-        data.frame(pwsprob_gm),
-        direction = 'long',
-        varying = list(colnames(data.frame(pwsprob_gm))),
-        idvar = 'y', timevar = 'x',
-        ids = rownames(pwsprob_gm), times = colnames(pwsprob_gm),
-        new.row.names = 1:length(c(pwsprob_gm)), v.names = 'prob'
-      )
-      pwsprob_gm = stats::na.exclude(pwsprob_gm[order(pwsprob_gm$x),])
-
-      if(verbose) message('6. Pairwise probability of superior stability (GM) estimated')
+      if(verbose) message('-> Pairwise probability of superior stability (GM) estimated')
 
       ## Probability of superior stability - year --------------
       staprob_gt = mod$post$gt
       colnames(staprob_gt) = sub(
         'Gen_@#','',do.call(rbind,strsplit(colnames(staprob_gt),'_@#year'))[,1]
       )
+      if(any(table(colnames(staprob_gt)) == 1)){
+        oncegeno =  names(table(colnames(staprob_gt))[which(table(colnames(staprob_gt)) == 1)])
+        staprob_gt = staprob_gt[,-which(colnames(staprob_gt) %in% oncegeno)]
+        warning("Some genotypes were evaluated in only one year, so we could not compute their stability: ",
+                paste(oncegeno, collapse = ", "))
+      }
       probsta = do.call(cbind, lapply(
         lapply(
           name.gen, function(x) staprob_gt[,grep(paste0(x,'$'), colnames(staprob_gt))]
@@ -607,16 +443,10 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
       rownames(ind_post) = name.gen
       prob_gt = data.frame(ID = rownames(ind_post), prob = rowMeans(ind_post), row.names = NULL)
       prob_gt = prob_gt[order(prob_gt$prob, decreasing = T),]
-      prob_gt.plot = ggplot(prob_gt)+
-        geom_segment(aes(x = factor(.data$ID, levels = .data$ID), xend = .data$ID,
-                         y = 0, yend = .data$prob), linewidth = 1) +
-        geom_point(aes(x = factor(.data$ID, levels = .data$ID), y = .data$prob),
-                   size = 2, color = 'black', fill = alpha('#33a02c', 0.3),
-                   alpha = 0.7, shape = 21, stroke = .4) +
-        labs(x = 'Genotypes', y = 'Probability of superior stability') +
-        theme(axis.text.x = element_text(angle = 90)) #+ ylim(0,1)
 
-      if(verbose) message('7. Probability of superior stability (GT) estimated')
+      output$across$stabi$gt = prob_gt
+
+      if(verbose) message('-> Probability of superior stability (GT) estimated')
 
 
       ## Pairwise probability of superior stability - year -----------------
@@ -627,41 +457,9 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
           pwsprob_gt[i,j] = mean(probsta[,j] < probsta[,i])
         }
       }
-      pwsprob_gt1 = pwsprob_gt[match(prob_gt$ID, rownames(pwsprob_gt)),
-                               match(prob_gt$ID, rownames(pwsprob_gt))]
-      pwsprob_gt1[upper.tri(pwsprob_gt1, diag = T)] = NA
-      pwsprob_gt1 = stats::reshape(
-        data.frame(pwsprob_gt1),
-        direction = 'long',
-        varying = list(colnames(data.frame(pwsprob_gt1))),
-        idvar = 'y', timevar = 'x',
-        ids = rownames(pwsprob_gt1), times = colnames(pwsprob_gt1),
-        new.row.names = NULL, v.names = 'prob'
-      )
-      pwsprob_gt.plot = ggplot(pwsprob_gt1,
-                               aes(x = factor(.data$x, levels = unique(.data$x)),
-                                   y = factor(.data$y, levels = unique(.data$y))))+
-        geom_tile(aes(fill = .data$prob), colour = 'white')+
-        labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold("Pr["~var(gt[x]) < var(gt[y])~"]")))+
-        theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-              legend.position = c(.8,.15), legend.direction = 'horizontal')+
-        scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                             option = 'turbo')+
-        guides(fill = guide_colorbar(barwidth = 9, barheight = 1.5, title.position = 'top',
-                                     title.hjust = .5))
+      output$across$pair_stabi$gt = pwsprob_gt
 
-      pwsprob_gt[upper.tri(pwsprob_gt, diag = T)] = NA
-      pwsprob_gt = stats::reshape(
-        data.frame(pwsprob_gt),
-        direction = 'long',
-        varying = list(colnames(data.frame(pwsprob_gt))),
-        idvar = 'y', timevar = 'x',
-        ids = rownames(pwsprob_gt), times = colnames(pwsprob_gt),
-        new.row.names = 1:length(c(pwsprob_gt)), v.names = 'prob'
-      )
-      pwsprob_gt = stats::na.exclude(pwsprob_gt[order(pwsprob_gt$x),])
-
-      if(verbose) message('8. Pairwise probability of superior stability (GT) estimated')
+      if(verbose) message('-> Pairwise probability of superior stability (GT) estimated')
 
       ## Joint probability of superior performance and stability -----------------
       j_prob = rbind(merge(prob_g, prob_gl, by = 'ID'),
@@ -670,7 +468,7 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
 
       j_prob$joint = j_prob[,2] * j_prob[,3]
       colnames(j_prob) = c('ID', 'Performance', 'Stability', 'Joint')
-      j_prob$lev = rep(c('Location', 'Region', 'Year'), each = num.gen)
+      j_prob$lev = rep(c(loc, reg, year), each = num.gen)
       j_prob = stats::reshape(j_prob, direction = 'long', varying = list(2:4),
                               times = colnames(j_prob)[2:4], v.names = 'value')
       j_prob = j_prob[,-5]
@@ -680,110 +478,30 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
 
       j_prob = j_prob[j_prob$category == "Joint",]
 
-      retrieve = function(x) do.call(rbind, strsplit(x, '@#_'))[,1]
+      output$across$joint = j_prob
 
-      j_prob.plot = ggplot(cbind(j_prob, V4 = paste(j_prob$ID, j_prob$level, sep = '@#_')),
-                           aes(x = stats::reorder(.data$V4, -.data$prob), y = .data$prob)) +
-        facet_wrap(.~.data$level, ncol = 1, scales = "free_x") +
-        theme(axis.text.x = element_text(angle = 90)) +
-        scale_x_discrete(labels = retrieve) +
-        geom_segment(aes(x = reorder(.data$V4, -.data$prob), xend = .data$V4,
-                         y = 0, yend = .data$prob), linewidth = 1) +
-        geom_point(size = 2, color = 'black', fill = alpha('#33a02c', 0.3),
-                   alpha = 0.7, shape = 21, stroke = .4) +
-        labs(x = "Genotype", y = "Joint probability")
-
-      if(verbose) message('9. Joint probability of superior performance and stability estimated')
-
-      ## Transform into interactive plots -----------------
-
-      if(interactive){
-        g_hpd = plotly::ggplotly(g_hpd)
-        prob_g.plot = plotly::ggplotly(prob_g.plot)
-        prob_gl.plot = plotly::ggplotly(prob_gl.plot)
-        prob_gm.plot = plotly::ggplotly(prob_gm.plot)
-        prob_gt.plot = plotly::ggplotly(prob_gt.plot)
-        j_prob.plot = plotly::ggplotly(j_prob.plot)
-        pwsprob_g.plot = plotly::ggplotly(
-          ggplot(data = pwsprob_g1, aes(x = factor(.data$x, levels = unique(.data$x)),
-                                        y = factor(.data$y, levels = unique(.data$y)),
-                                        fill = .data$prob)) +
-            geom_tile() +
-            scale_fill_viridis_c(option = 'turbo', limits = c(0,1),
-                                 na.value = 'white', direction = 1) +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = 'Pr[g(x) > g(y)]') +
-            theme(axis.text.x = element_text(angle = 90),
-                  panel.background = element_blank())
-        )
-        pwsprob_gl.plot = plotly::ggplotly(
-          ggplot(data = pwsprob_gl, aes(x = factor(.data$x, levels = unique(.data$x)),
-                                        y = factor(.data$y, levels = unique(.data$y)),
-                                        fill = .data$prob)) +
-            geom_tile() +
-            scale_fill_viridis_c(option = 'turbo', limits = c(0,1),
-                                 na.value = 'white', direction = 1) +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = 'Pr[var(gl(x)) < var(gl(y))]') +
-            theme(axis.text.x = element_text(angle = 90),
-                  panel.background = element_blank())
-        )
-        pwsprob_gm.plot = plotly::ggplotly(
-          ggplot(data = pwsprob_gm, aes(x = factor(.data$x, levels = unique(.data$x)),
-                                        y = factor(.data$y, levels = unique(.data$y)),
-                                        fill = .data$prob)) +
-            geom_tile() +
-            scale_fill_viridis_c(option = 'turbo', limits = c(0,1),
-                                 na.value = 'white', direction = 1) +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = 'Pr[var(gm(x)) < var(gm(y))]') +
-            theme(axis.text.x = element_text(angle = 90),
-                  panel.background = element_blank())
-        )
-        pwsprob_gt.plot = plotly::ggplotly(
-          ggplot(data = pwsprob_gt, aes(x = factor(.data$x, levels = unique(.data$x)),
-                                        y = factor(.data$y, levels = unique(.data$y)),
-                                        fill = .data$prob)) +
-            geom_tile() +
-            scale_fill_viridis_c(option = 'turbo', limits = c(0,1),
-                                 na.value = 'white', direction = 1) +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = 'Pr[var(gt(x)) < var(gt(y))]') +
-            theme(axis.text.x = element_text(angle = 90),
-                  panel.background = element_blank())
-        )
-      }
-
-      ## Save the outputs in a list -----------------
-      marg_prob = list(
-        df = list(
-          perfo = prob_g,
-          pair_perfo = pwsprob_g,
-          stabi_gl = prob_gl,
-          pair_stabi_gl = pwsprob_gl,
-          stabi_gm = prob_gm,
-          pair_stabi_gm = pwsprob_gm,
-          stabi_gt = prob_gt,
-          pair_stabi_gt = pwsprob_gt,
-          joint_prob = j_prob
-        ),
-        plots = list(
-          g_hpd = g_hpd,
-          perfo = prob_g.plot,
-          pair_perfo = pwsprob_g.plot,
-          stabi_gl = prob_gl.plot,
-          pair_stabi_gl = pwsprob_gl.plot,
-          stabi_gm = prob_gm.plot,
-          pair_stabi_gm = pwsprob_gm.plot,
-          stabi_gt = prob_gt.plot,
-          pair_stabi_gt = pwsprob_gt.plot,
-          joint_prob = j_prob.plot
-        )
-      )
+      if(verbose) message('-> Joint probability of superior performance and stability estimated')
 
       ## Save data frames in the work directory -----------------
       if(save.df){
-        dir.create(path = paste0(getwd(),'/marg_prob'))
-        for (i in names(marg_prob$df)){
-          utils::write.csv(marg_prob$df[[i]],
-                           file = paste0(getwd(),'/marg_prob/',i,'.csv'),
+        dir.create(path = paste0(getwd(),'/across_probs'))
+        utils::write.csv(output$across$pair_perfo,
+                         file = paste0(getwd(),'/across_probs/pair_perfo.csv'),
+                         row.names = T)
+        for (i in names(output$across)[-grep("stabi|pair", names(output$across))]){
+          utils::write.csv(output$across[[i]],
+                           file = paste0(getwd(),'/across_probs/',i,'.csv'),
                            row.names = F)
+        }
+        for (i in names(output$across$stabi)){
+          utils::write.csv(output$across$stabi[[i]],
+                           file = paste0(getwd(),'/across_probs/stabi_',i,'.csv'),
+                           row.names = F)
+        }
+        for (i in names(output$across$pair_stabi)){
+          utils::write.csv(output$across$pair_stabi[[i]],
+                           file = paste0(getwd(),'/across_probs/pair_stabi_',i,'.csv'),
+                           row.names = T)
         }
       }
 
@@ -839,30 +557,9 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
       prob_ggl = suppressWarnings(Reduce(function(df1, df2) merge(df1, df2, by = 'gen', all = T), probs))
       colnames(prob_ggl)[-1] = name.loc
 
-      prob_ggl.plot = ggplot(
-        data =  stats::reshape(
-          data = prob_ggl, direction = 'long',
-          varying = list(colnames(prob_ggl)[-1]),
-          ids = name.gen, times = name.loc,
-          v.names = 'prob',
-          idvar = 'gen', timevar = 'loc'
-        ),
-        aes(x = .data$loc, y = factor(.data$gen, levels = ord_gen), fill = .data$prob)
-      ) +
-        geom_tile(colour = 'white') +
-        theme(axis.text.x = element_text(angle = 90),
-              panel.background = element_blank(),
-              legend.position = 'top') +
-        scale_fill_viridis_c(direction = 1, na.value = '#D3D7DC',
-                             limits = c(0,1), option = 'turbo') +
-        labs(x = "Locations", y = 'Genotypes',
-             fill = expression(bold(Pr(g %in% Omega)))) +
-        guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5,
-                                     title.position = 'top',
-                                     title.hjust = .5)) +
-        scale_y_discrete(limits = rev)
+      output$within$perfo$gl = prob_ggl
 
-      if(verbose) message('10. Probability of superior performance within locations estimated')
+      if(verbose) message('-> Probability of superior performance within locations estimated')
 
       ## Pairwise probability of superior performance per location ----------------
 
@@ -879,19 +576,6 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
           a
         })
 
-        pwprobs.loc.plots = lapply(pwprobs.loc, function(x){
-          ggplot(data = x, aes(x = factor(.data$x, levels = unique(.data$x)),
-                               y = factor(.data$y, levels = unique(.data$y)),
-                               fill = .data$pwprob)) +
-            geom_tile() +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] > g[y]))))+
-            scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                 option = 'turbo')+
-            guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
-                                         title.hjust = .5)) +
-            theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-                  legend.position = c(.8,.15), legend.direction = 'horizontal')
-        })
       } else {
         pwprobs.loc = lapply(cond_ggl, function(x){
           combs = data.frame(t(utils::combn(colnames(x), 2)))
@@ -904,24 +588,11 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
                     }))
           a
         })
-
-        pwprobs.loc.plots = lapply(pwprobs.loc, function(x){
-          ggplot(data = x, aes(x = factor(.data$x, levels = unique(.data$x)),
-                               y = factor(.data$y, levels = unique(.data$y)),
-                               fill = .data$pwprob)) +
-            geom_tile() +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] < g[y]))))+
-            scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                 option = 'turbo')+
-            guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
-                                         title.hjust = .5)) +
-            theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-                  legend.position = c(.8,.15), legend.direction = 'horizontal')
-        })
       }
 
+      output$within$pair_perfo$gl = pwprobs.loc
 
-      if(verbose) message('11. Pairwise probability of superior performance within locations estimated')
+      if(verbose) message('-> Pairwise probability of superior performance within locations estimated')
 
       ## Probability of superior performance by Region ----------------
       cond_ggm = stats::aggregate(
@@ -949,30 +620,9 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
       prob_ggm = suppressWarnings(Reduce(function(df1, df2) merge(df1, df2, by = 'gen', all = T), probs))
       colnames(prob_ggm)[-1] = name.reg
 
-      prob_ggm.plot = ggplot(
-        data =  stats::reshape(
-          data = prob_ggm, direction = 'long',
-          varying = list(colnames(prob_ggm)[-1]),
-          ids = name.gen, times = name.reg,
-          v.names = 'prob',
-          idvar = 'gen', timevar = 'reg'
-        ),
-        aes(x = .data$reg, y = factor(.data$gen, levels = ord_gen), fill = .data$prob)
-      ) +
-        geom_tile(colour = 'white') +
-        theme(axis.text.x = element_text(angle = 90),
-              panel.background = element_blank(),
-              legend.position = 'top') +
-        scale_fill_viridis_c(direction = 1, na.value = '#D3D7DC',
-                             limits = c(0,1), option = 'turbo') +
-        labs(x = "Regions", y = 'Genotypes',
-             fill = expression(bold(Pr(g %in% Omega)))) +
-        guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5,
-                                     title.position = 'top',
-                                     title.hjust = .5))+
-        scale_y_discrete(limits = rev)
+      output$within$perfo$gm = prob_ggm
 
-      if(verbose) message('12. Probability of superior performance within regions estimated')
+      if(verbose) message('-> Probability of superior performance within regions estimated')
 
       ## Pairwise probability of superior performance per Region ----------------
 
@@ -989,17 +639,6 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
           a
         })
 
-        pwprobs.reg.plots = lapply(pwprobs.reg, function(x){
-          ggplot(data = x, aes(x = .data$x, y = .data$y, fill = .data$pwprob)) +
-            geom_tile() +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] > g[y]))))+
-            scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                 option = 'turbo')+
-            guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
-                                         title.hjust = .5)) +
-            theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-                  legend.position = c(.8,.15), legend.direction = 'horizontal')
-        })
       } else {
         pwprobs.reg = lapply(cond_ggm, function(x){
           combs = data.frame(t(utils::combn(colnames(x), 2)))
@@ -1013,20 +652,11 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
           a
         })
 
-        pwprobs.reg.plots = lapply(pwprobs.reg, function(x){
-          ggplot(data = x, aes(x = .data$x, y = .data$y, fill = .data$pwprob)) +
-            geom_tile() +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] < g[y]))))+
-            scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                 option = 'turbo')+
-            guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
-                                         title.hjust = .5)) +
-            theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-                  legend.position = c(.8,.15), legend.direction = 'horizontal')
-        })
       }
 
-      if(verbose) message('13. Pairwise probability of superior performance within regions estimated')
+      output$within$pair_perfo$gm = pwprobs.reg
+
+      if(verbose) message('-> Pairwise probability of superior performance within regions estimated')
 
       ## Probability of superior performance by year ----------------
       cond_ggt = stats::aggregate(
@@ -1054,30 +684,9 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
       prob_ggt = suppressWarnings(Reduce(function(df1, df2) merge(df1, df2, by = 'gen', all = T), probs))
       colnames(prob_ggt)[-1] = name.year
 
-      prob_ggt.plot = ggplot(
-        data =  stats::reshape(
-          data = prob_ggt, direction = 'long',
-          varying = list(colnames(prob_ggt)[-1]),
-          ids = name.gen, times = name.year,
-          v.names = 'prob',
-          idvar = 'gen', timevar = 'year'
-        ),
-        aes(x = .data$year, y = factor(.data$gen, levels = ord_gen), fill = .data$prob)
-      ) +
-        geom_tile(colour = 'white') +
-        theme(axis.text.x = element_text(angle = 90),
-              panel.background = element_blank(),
-              legend.position = 'top') +
-        scale_fill_viridis_c(direction = 1, na.value = '#D3D7DC',
-                             limits = c(0,1), option = 'turbo') +
-        labs(x = "Year", y = 'Genotypes',
-             fill = expression(bold(Pr(g %in% Omega)))) +
-        guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5,
-                                     title.position = 'top',
-                                     title.hjust = .5))+
-        scale_y_discrete(limits = rev)
+      output$within$perfo$gt = prob_ggt
 
-      if(verbose) message('14. Probability of superior performance within year estimated')
+      if(verbose) message('-> Probability of superior performance within year estimated')
 
       ## Pairwise probability of superior performance per year ----------------
 
@@ -1094,17 +703,6 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
           a
         })
 
-        pwprobs.year.plots = lapply(pwprobs.year, function(x){
-          ggplot(data = x, aes(x = .data$x, y = .data$y, fill = .data$pwprob)) +
-            geom_tile() +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] > g[y]))))+
-            scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                 option = 'turbo')+
-            guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
-                                         title.hjust = .5)) +
-            theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-                  legend.position = c(.8,.15), legend.direction = 'horizontal')
-        })
       } else {
         pwprobs.year = lapply(cond_ggt, function(x){
           combs = data.frame(t(utils::combn(colnames(x), 2)))
@@ -1118,225 +716,48 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
           a
         })
 
-        pwprobs.year.plots = lapply(pwprobs.year, function(x){
-          ggplot(data = x, aes(x = .data$x, y = .data$y, fill = .data$pwprob)) +
-            geom_tile() +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] < g[y]))))+
-            scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                 option = 'turbo')+
-            guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
-                                         title.hjust = .5)) +
-            theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-                  legend.position = c(.8,.15), legend.direction = 'horizontal')
-        })
       }
 
-      if(verbose) message('15. Pairwise probability of superior performance within year estimated')
+      output$within$pair_perfo$gt = pwprobs.year
 
-      ## Transform into interactive plots -----------------
-      if(interactive){
-        prob_ggl.plot = plotly::ggplotly(
-          ggplot(
-            data =  stats::reshape(
-              data = prob_ggl, direction = 'long',
-              varying = list(colnames(prob_ggl)[-1]),
-              ids = name.gen, times = name.loc,
-              v.names = 'prob',
-              idvar = 'gen', timevar = 'loc'
-            ),
-            aes(x = .data$loc, y = factor(.data$gen, levels = ord_gen),
-                fill = .data$prob)
-          ) +
-            geom_tile(colour = 'white') +
-            theme(axis.text.x = element_text(angle = 90),
-                  panel.background = element_blank(),
-                  legend.position = 'top') +
-            scale_fill_viridis_c(direction = 1, na.value = '#D3D7DC',
-                                 limits = c(0,1), option = 'turbo') +
-            labs(x = "Locations", y = 'Genotypes',
-                 fill = expression(bold(Pr(g %in% Omega))))
-        )
+      if(verbose) message('-> Pairwise probability of superior performance within year estimated')
 
-        prob_ggm.plot = suppressWarnings(plotly::ggplotly(
-          ggplot(
-            data =  stats::reshape(
-              data = prob_ggm, direction = 'long',
-              varying = list(colnames(prob_ggm)[-1]),
-              ids = name.gen, times = name.reg,
-              v.names = 'prob',
-              idvar = 'gen', timevar = 'reg'
-            ),
-            aes(x = .data$reg, y = factor(.data$gen, levels = ord_gen),
-                fill = .data$prob)
-          )  +
-            geom_tile(colour = 'white', na.rm = T) +
-            theme(axis.text.x = element_text(angle = 90),
-                  panel.background = element_blank(),
-                  legend.position = 'top') +
-            scale_fill_viridis_c(direction = 1, na.value = '#D3D7DC',
-                                 limits = c(0,1), option = 'turbo') +
-            labs(x = "Region", y = 'Genotypes',
-                 fill = expression(bold(Pr(g %in% Omega))))
-        ))
-
-        prob_ggt.plot = suppressWarnings(plotly::ggplotly(
-          ggplot(
-            data =  stats::reshape(
-              data = prob_ggt, direction = 'long',
-              varying = list(colnames(prob_ggt)[-1]),
-              ids = name.gen, times = name.year,
-              v.names = 'prob',
-              idvar = 'gen', timevar = 'year'
-            ),
-            aes(x = .data$year, y = factor(.data$gen, levels = ord_gen),
-                fill = .data$prob)
-          )  +
-            geom_tile(colour = 'white', na.rm = T) +
-            theme(axis.text.x = element_text(angle = 90),
-                  panel.background = element_blank(),
-                  legend.position = 'top') +
-            scale_fill_viridis_c(direction = 1, na.value = '#D3D7DC',
-                                 limits = c(0,1), option = 'turbo') +
-            labs(x = "Year", y = 'Genotypes',
-                 fill = expression(bold(Pr(g %in% Omega))))
-        ))
-
-        if(increase){
-          pwprobs.loc_plots = lapply(pwprobs.loc, function(x){
-            plotly::ggplotly(
-              ggplot(data = x, aes(x = .data$x, y = .data$y, fill = .data$pwprob)) +
-                geom_tile() +
-                labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] > g[y]))))+
-                scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                     option = 'turbo') +
-                theme(axis.text.x = element_text(angle = 90),
-                      panel.background = element_blank())
-            )
-          })
-        } else {
-          pwprobs.loc_plots = lapply(pwprobs.loc, function(x){
-            plotly::ggplotly(
-              ggplot(data = x, aes(x = .data$x, y = .data$y, fill = .data$pwprob)) +
-                geom_tile() +
-                labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] < g[y]))))+
-                scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                     option = 'turbo') +
-                theme(axis.text.x = element_text(angle = 90),
-                      panel.background = element_blank())
-            )
-          })
-        }
-
-        if(increase){
-          pwprobs.reg.plots = lapply(pwprobs.reg, function(x){
-            plotly::ggplotly(
-              ggplot(data = x, aes(x = .data$x, y = .data$y, fill = .data$pwprob)) +
-                geom_tile() +
-                labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] > g[y]))))+
-                scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                     option = 'turbo') +
-                theme(axis.text.x = element_text(angle = 90),
-                      panel.background = element_blank())
-            )
-          })
-        } else {
-          pwprobs.reg.plots = lapply(pwprobs.reg, function(x){
-            plotly::ggplotly(
-              ggplot(data = x, aes(x = .data$x, y = .data$y, fill = .data$pwprob)) +
-                geom_tile() +
-                labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] < g[y]))))+
-                scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                     option = 'turbo') +
-                theme(axis.text.x = element_text(angle = 90),
-                      panel.background = element_blank())
-            )
-          })
-        }
-
-        if(increase){
-          pwprobs.year.plots = lapply(pwprobs.year, function(x){
-            plotly::ggplotly(
-              ggplot(data = x, aes(x = .data$x, y = .data$y, fill = .data$pwprob)) +
-                geom_tile() +
-                labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] > g[y]))))+
-                scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                     option = 'turbo') +
-                theme(axis.text.x = element_text(angle = 90),
-                      panel.background = element_blank())
-            )
-          })
-        } else {
-          pwprobs.year.plots = lapply(pwprobs.year, function(x){
-            plotly::ggplotly(
-              ggplot(data = x, aes(x = .data$x, y = .data$y, fill = .data$pwprob)) +
-                geom_tile() +
-                labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] < g[y]))))+
-                scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                     option = 'turbo') +
-                theme(axis.text.x = element_text(angle = 90),
-                      panel.background = element_blank())
-            )
-          })
-        }
-
-      }
-
-      ## Save the outputs in a list -----------------
-      cond_prob = list(
-        df = list(
-          prob_loc = prob_ggl,
-          prob_reg = prob_ggm,
-          prob_year = prob_ggt,
-          pwprob_loc = pwprobs.loc,
-          pwprob_reg = pwprobs.reg,
-          pwprob_year = pwprobs.year
-        ),
-        plots = list(
-          prob_loc = prob_ggl.plot,
-          prob_reg = prob_ggm.plot,
-          prob_year = prob_ggt.plot,
-          pwprob_loc = pwprobs.loc.plots,
-          pwprob_reg = pwprobs.reg.plots,
-          pwprob_year = pwprobs.year.plots
-        )
-      )
 
       ## Save data frames in the work directory -----------------
 
       if(save.df){
-        dir.create(path = paste0(getwd(),'/cond_prob'))
+        dir.create(path = paste0(getwd(),'/within'))
         utils::write.csv(prob_ggl,
-                         file = paste0(getwd(),'/cond_prob/prob_loc.csv'),
+                         file = paste0(getwd(),'/within_probs/prob_ggl.csv'),
                          row.names = F)
         utils::write.csv(prob_ggm,
-                         file = paste0(getwd(),'/cond_prob/prob_reg.csv'),
+                         file = paste0(getwd(),'/within_probs/prob_ggm.csv'),
                          row.names = F)
         utils::write.csv(prob_ggt,
-                         file = paste0(getwd(),'/cond_prob/prob_year.csv'),
+                         file = paste0(getwd(),'/within_probs/prob_ggt.csv'),
                          row.names = F)
-        dir.create(path = paste0(getwd(),'/cond_prob/pairwise_loc'))
+        dir.create(path = paste0(getwd(),'/within_probs/pairwise_ggl'))
         for (i in names(pwprobs.loc)){
           utils::write.csv(pwprobs.loc[[i]],
-                           file = paste0(getwd(),'/cond_prob/pairwise_loc/',i,'.csv'),
+                           file = paste0(getwd(),'/within_probs/pairwise_ggl/',i,'.csv'),
                            row.names = F)
         }
-        dir.create(path = paste0(getwd(),'/cond_prob/pairwise_reg'))
+        dir.create(path = paste0(getwd(),'/within_probs/pairwise_ggm'))
         for (i in names(pwprobs.reg)){
           utils::write.csv(pwprobs.reg[[i]],
-                           file = paste0(getwd(),'/cond_prob/pairwise_reg/',i,'.csv'),
+                           file = paste0(getwd(),'/within_probs/pairwise_ggm/',i,'.csv'),
                            row.names = F)
         }
-        dir.create(path = paste0(getwd(),'/cond_prob/pairwise_year'))
+        dir.create(path = paste0(getwd(),'/within_probs/pairwise_ggt'))
         for (i in names(pwprobs.year)){
           utils::write.csv(pwprobs.year[[i]],
-                           file = paste0(getwd(),'/cond_prob/pairwise_year/',i,'.csv'),
+                           file = paste0(getwd(),'/within_probs/pairwise_ggt/',i,'.csv'),
                            row.names = F)
         }
       }
 
       # Final output -----------
       if(verbose) message('Process completed!')
-      output = list(marginal = marg_prob, conditional = cond_prob)
       return(output)
 
     }
@@ -1348,24 +769,27 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
       aux = unique(data[,c(gen,loc,year)])
       Z1 = stats::model.matrix(~-1 + aux[,gen])
       Z2 = stats::model.matrix(~-1 + aux[,gen]:aux[,loc])
+      if(any(colSums(Z2) == 0)){
+        mod$post$gl = mod$post$gl[,-which(colSums(Z2) == 0)]
+        Z2 = Z2[,-which(colSums(Z2) == 0)]
+      }
       Z3 = stats::model.matrix(~-1 + aux[,gen]:aux[,year])
+      if(any(colSums(Z3) == 0)){
+        mod$post$gt = mod$post$gt[,-which(colSums(Z3) == 0)]
+        Z3 = Z3[,-which(colSums(Z3) == 0)]
+      }
 
       # Genotypic effects and their HPD ------------
       g_hpd = data.frame(
         gen = name.gen,
         g = apply(mod$post$g, 2, stats::median),
-        UP = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.95)),
-        up = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.975)),
-        DOWN = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.05)),
-        down = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.025)),
+        HPD95 = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.95)),
+        HPD97.5 = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.975)),
+        HPD5 = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.05)),
+        HPD7.5 = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.025)),
         row.names = NULL
       )
-
-      g_hpd = ggplot(data = g_hpd, aes(x = .data$g, y = reorder(.data$gen, .data$g))) +
-        geom_errorbar(aes(xmin = .data$down, xmax = .data$up), width = 0)+
-        geom_errorbar(aes(xmin = .data$DOWN, xmax = .data$UP), width = 0, linewidth = 2, alpha = .8) +
-        labs(x = 'Genotypic main effects (HPD)', y = 'Genotypes') +
-        geom_point(size = 4, color = '#33a02c')
+      output$across$g_hpd = g_hpd
 
 
       # Marginal probabilities ----------------
@@ -1389,16 +813,10 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
       rownames(ind_post) = name.gen
       prob_g = data.frame(ID = rownames(ind_post), prob = rowMeans(ind_post), row.names = NULL)
       prob_g = prob_g[order(prob_g$prob, decreasing = T),]
-      prob_g.plot = ggplot(prob_g) +
-        geom_segment(aes(x = factor(.data$ID, levels = .data$ID), xend = .data$ID,
-                         y = 0, yend = .data$prob), linewidth = 1) +
-        geom_point(aes(x = factor(.data$ID, levels = .data$ID), y = .data$prob),
-                   size = 2, color = 'black', fill = alpha('#33a02c', 0.3),
-                   alpha = 0.7, shape = 21, stroke = .4) +
-        labs(x = 'Genotypes', y = 'Probability of superior performance') +
-        theme(axis.text.x = element_text(angle = 90)) # + ylim(0,1)
 
-      if(verbose) message('1. Probability of superior performance estimated')
+      if(verbose) message('-> Probability of superior performance estimated')
+
+      output$across$perfo = prob_g
 
       ord_gen = factor(prob_g$ID, levels = prob_g$ID)
 
@@ -1421,66 +839,21 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
       }
 
       colnames(pwsprob_g) = rownames(pwsprob_g) = unlist(strsplit(rownames(pwsprob_g), split = '_@#'))
-      pwsprob_g1 = pwsprob_g[match(prob_g$ID, rownames(pwsprob_g)),
-                             match(prob_g$ID, rownames(pwsprob_g))]
-      pwsprob_g1[upper.tri(pwsprob_g1, diag = T)] = NA
-      pwsprob_g1 = stats::reshape(
-        data.frame(pwsprob_g1),
-        direction = 'long',
-        varying = list(colnames(data.frame(pwsprob_g1))),
-        idvar = 'y', timevar = 'x',
-        ids = rownames(pwsprob_g1), times = colnames(pwsprob_g1),
-        new.row.names = NULL, v.names = 'prob'
-      )
+      output$across$pair_perfo = pwsprob_g
 
-      if(increase){
-        pwsprob_g.plot = ggplot(pwsprob_g1,
-                                aes(x = factor(.data$x,
-                                               levels = unique(.data$x)),
-                                    y = factor(.data$y,
-                                               levels = unique(.data$y))))+
-          geom_tile(aes(fill = .data$prob), colour = 'white') +
-          labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] > g[y]))))+
-          theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-                legend.position = c(.8,.15), legend.direction = 'horizontal')+
-          scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                               option = 'turbo')+
-          guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
-                                       title.hjust = .5))
-      } else {
-        pwsprob_g.plot = ggplot(pwsprob_g1,
-                                aes(x = factor(.data$x,
-                                               levels = unique(.data$x)),
-                                    y = factor(.data$y,
-                                               levels = unique(.data$y))))+
-          geom_tile(aes(fill = .data$prob), colour = 'white') +
-          labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] < g[y]))))+
-          theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-                legend.position = c(.8,.15), legend.direction = 'horizontal')+
-          scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                               option = 'turbo')+
-          guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
-                                       title.hjust = .5))
-      }
-
-      pwsprob_g[upper.tri(pwsprob_g, diag = T)] = NA
-      pwsprob_g = stats::reshape(
-        data.frame(pwsprob_g),
-        direction = 'long',
-        varying = list(colnames(data.frame(pwsprob_g))),
-        idvar = 'y', timevar = 'x',
-        ids = rownames(pwsprob_g), times = colnames(pwsprob_g),
-        new.row.names = 1:length(c(pwsprob_g)), v.names = 'prob'
-      )
-      pwsprob_g = stats::na.exclude(pwsprob_g[order(pwsprob_g$x),])
-
-      if(verbose) message('2. Pairwise probability of superior performance estimated')
+      if(verbose) message('-> Pairwise probability of superior performance estimated')
 
       ## Probability of superior stability - Location -----------------
       staprob_gl = mod$post$gl
       colnames(staprob_gl) = sub(
         'Gen_@#','',do.call(rbind,strsplit(colnames(staprob_gl),'_@#loc'))[,1]
       )
+      if(any(table(colnames(staprob_gl)) == 1)){
+        oncegeno =  names(table(colnames(staprob_gl))[which(table(colnames(staprob_gl)) == 1)])
+        staprob_gl = staprob_gl[,-which(colnames(staprob_gl) %in% oncegeno)]
+        warning("Some genotypes were evaluated in only one location (environment), so we could not compute their stability: ",
+                paste(oncegeno, collapse = ", "))
+      }
       probsta = do.call(cbind, lapply(
         lapply(
           name.gen, function(x) staprob_gl[,grep(paste0(x,'$'), colnames(staprob_gl))]
@@ -1495,16 +868,10 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
       rownames(ind_post) = name.gen
       prob_gl = data.frame(ID = rownames(ind_post), prob = rowMeans(ind_post), row.names = NULL)
       prob_gl = prob_gl[order(prob_gl$prob, decreasing = T),]
-      prob_gl.plot = ggplot(prob_gl)+
-        geom_segment(aes(x = factor(.data$ID, levels = .data$ID), xend = .data$ID,
-                         y = 0, yend = .data$prob), linewidth = 1) +
-        geom_point(aes(x = factor(.data$ID, levels = .data$ID), y = .data$prob),
-                   size = 2, color = 'black', fill = alpha('#33a02c', 0.3),
-                   alpha = 0.7, shape = 21, stroke = .4) +
-        labs(x = 'Genotypes', y = 'Probability of superior stability') +
-        theme(axis.text.x = element_text(angle = 90)) #+ ylim(0,1)
 
-      if(verbose) message('3. Probability of superior stability (GL) estimated')
+      output$across$stabi$gl = prob_gl
+
+      if(verbose) message('-> Probability of superior stability (GL) estimated')
 
       ## Pairwise probability of superior stability - Location -------------
       pwsprob_gl = matrix(NA, num.gen, num.gen,
@@ -1514,47 +881,22 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
           pwsprob_gl[i,j] = mean(probsta[,j] < probsta[,i])
         }
       }
-      pwsprob_gl1 = pwsprob_gl[match(prob_gl$ID, rownames(pwsprob_gl)),
-                               match(prob_gl$ID, rownames(pwsprob_gl))]
-      pwsprob_gl1[upper.tri(pwsprob_gl1, diag = T)] = NA
-      pwsprob_gl1 = stats::reshape(
-        data.frame(pwsprob_gl1),
-        direction = 'long',
-        varying = list(colnames(data.frame(pwsprob_gl1))),
-        idvar = 'y', timevar = 'x',
-        ids = rownames(pwsprob_gl1), times = colnames(pwsprob_gl1),
-        new.row.names = NULL, v.names = 'prob'
-      )
-      pwsprob_gl.plot = ggplot(pwsprob_gl1,
-                               aes(x = factor(.data$x, levels = unique(.data$x)),
-                                   y = factor(.data$y, levels = unique(.data$y))))+
-        geom_tile(aes(fill = .data$prob), colour = 'white')+
-        labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold("Pr["~var(gl[x]) < var(gl[y])~"]")))+
-        theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-              legend.position = c(.8,.15), legend.direction = 'horizontal')+
-        scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                             option = 'turbo')+
-        guides(fill = guide_colorbar(barwidth = 9, barheight = 1.5, title.position = 'top',
-                                     title.hjust = .5))
 
-      pwsprob_gl[upper.tri(pwsprob_gl, diag = T)] = NA
-      pwsprob_gl = stats::reshape(
-        data.frame(pwsprob_gl),
-        direction = 'long',
-        varying = list(colnames(data.frame(pwsprob_gl))),
-        idvar = 'y', timevar = 'x',
-        ids = rownames(pwsprob_gl), times = colnames(pwsprob_gl),
-        new.row.names = 1:length(c(pwsprob_gl)), v.names = 'prob'
-      )
-      pwsprob_gl = stats::na.exclude(pwsprob_gl[order(pwsprob_gl$x),])
+      output$across$pair_stabi$gl = pwsprob_gl
 
-      if(verbose) message('4. Pairwise probability of superior stability (GL) estimated')
+      if(verbose) message('-> Pairwise probability of superior stability (GL) estimated')
 
       ## Probability of superior stability - year --------------
       staprob_gt = mod$post$gt
       colnames(staprob_gt) = sub(
         'Gen_@#','',do.call(rbind,strsplit(colnames(staprob_gt),'_@#year'))[,1]
       )
+      if(any(table(colnames(staprob_gt)) == 1)){
+        oncegeno =  names(table(colnames(staprob_gt))[which(table(colnames(staprob_gt)) == 1)])
+        staprob_gt = staprob_gt[,-which(colnames(staprob_gt) %in% oncegeno)]
+        warning("Some genotypes were evaluated in only one year, so we could not compute their stability: ",
+                paste(oncegeno, collapse = ", "))
+      }
       probsta = do.call(cbind, lapply(
         lapply(
           name.gen, function(x) staprob_gt[,grep(paste0(x,'$'), colnames(staprob_gt))]
@@ -1569,16 +911,10 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
       rownames(ind_post) = name.gen
       prob_gt = data.frame(ID = rownames(ind_post), prob = rowMeans(ind_post), row.names = NULL)
       prob_gt = prob_gt[order(prob_gt$prob, decreasing = T),]
-      prob_gt.plot = ggplot(prob_gt)+
-        geom_segment(aes(x = factor(.data$ID, levels = .data$ID), xend = .data$ID,
-                         y = 0, yend = .data$prob), linewidth = 1) +
-        geom_point(aes(x = factor(.data$ID, levels = .data$ID), y = .data$prob),
-                   size = 2, color = 'black', fill = alpha('#33a02c', 0.3),
-                   alpha = 0.7, shape = 21, stroke = .4) +
-        labs(x = 'Genotypes', y = 'Probability of superior stability') +
-        theme(axis.text.x = element_text(angle = 90)) #+ ylim(0,1)
 
-      if(verbose) message('5. Probability of superior stability (GT) estimated')
+      output$across$stabi$gt = prob_gt
+
+      if(verbose) message('-> Probability of superior stability (GT) estimated')
 
 
       ## Pairwise probability of superior stability - year -----------------
@@ -1589,41 +925,9 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
           pwsprob_gt[i,j] = mean(probsta[,j] < probsta[,i])
         }
       }
-      pwsprob_gt1 = pwsprob_gt[match(prob_gt$ID, rownames(pwsprob_gt)),
-                               match(prob_gt$ID, rownames(pwsprob_gt))]
-      pwsprob_gt1[upper.tri(pwsprob_gt1, diag = T)] = NA
-      pwsprob_gt1 = stats::reshape(
-        data.frame(pwsprob_gt1),
-        direction = 'long',
-        varying = list(colnames(data.frame(pwsprob_gt1))),
-        idvar = 'y', timevar = 'x',
-        ids = rownames(pwsprob_gt1), times = colnames(pwsprob_gt1),
-        new.row.names = NULL, v.names = 'prob'
-      )
-      pwsprob_gt.plot = ggplot(pwsprob_gt1,
-                               aes(x = factor(.data$x, levels = unique(.data$x)),
-                                   y = factor(.data$y, levels = unique(.data$y))))+
-        geom_tile(aes(fill = .data$prob), colour = 'white')+
-        labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold("Pr["~var(gt[x]) < var(gt[y])~"]")))+
-        theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-              legend.position = c(.8,.15), legend.direction = 'horizontal')+
-        scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                             option = 'turbo')+
-        guides(fill = guide_colorbar(barwidth = 9, barheight = 1.5, title.position = 'top',
-                                     title.hjust = .5))
+      output$across$pair_stabi$gt = pwsprob_gt
 
-      pwsprob_gt[upper.tri(pwsprob_gt, diag = T)] = NA
-      pwsprob_gt = stats::reshape(
-        data.frame(pwsprob_gt),
-        direction = 'long',
-        varying = list(colnames(data.frame(pwsprob_gt))),
-        idvar = 'y', timevar = 'x',
-        ids = rownames(pwsprob_gt), times = colnames(pwsprob_gt),
-        new.row.names = 1:length(c(pwsprob_gt)), v.names = 'prob'
-      )
-      pwsprob_gt = stats::na.exclude(pwsprob_gt[order(pwsprob_gt$x),])
-
-      if(verbose) message('6. Pairwise probability of superior stability (GT) estimated')
+      if(verbose) message('-> Pairwise probability of superior stability (GT) estimated')
 
       ## Joint probability of superior performance and stability -----------------
       j_prob = rbind(merge(prob_g, prob_gl, by = 'ID'),
@@ -1631,7 +935,7 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
 
       j_prob$joint = j_prob[,2] * j_prob[,3]
       colnames(j_prob) = c('ID', 'Performance', 'Stability', 'Joint')
-      j_prob$lev = rep(c('Location', 'Year'), each = num.gen)
+      j_prob$lev = rep(c(c(loc, year)), each = num.gen)
       j_prob = stats::reshape(j_prob, direction = 'long', varying = list(2:4),
                               times = colnames(j_prob)[2:4], v.names = 'value')
       j_prob = j_prob[,-5]
@@ -1641,95 +945,30 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
 
       j_prob = j_prob[j_prob$category == "Joint",]
 
-      retrieve = function(x) do.call(rbind, strsplit(x, '@#_'))[,1]
+      output$across$joint = j_prob
 
-      j_prob.plot = ggplot(cbind(j_prob, V4 = paste(j_prob$ID, j_prob$level, sep = '@#_')),
-                           aes(x = stats::reorder(.data$V4, -.data$prob), y = .data$prob)) +
-        facet_wrap(.~.data$level, ncol = 1, scales = "free_x") +
-        theme(axis.text.x = element_text(angle = 90)) +
-        scale_x_discrete(labels = retrieve) +
-        geom_segment(aes(x = reorder(.data$V4, -.data$prob), xend = .data$V4,
-                         y = 0, yend = .data$prob), linewidth = 1) +
-        geom_point(size = 2, color = 'black', fill = alpha('#33a02c', 0.3),
-                   alpha = 0.7, shape = 21, stroke = .4) +
-        labs(x = "Genotype", y = "Joint probability")
-
-      if(verbose) message('7. Joint probability of superior performance and stability estimated')
-
-      ## Transform into interactive plots -----------------
-
-      if(interactive){
-        g_hpd = plotly::ggplotly(g_hpd)
-        prob_g.plot = plotly::ggplotly(prob_g.plot)
-        prob_gl.plot = plotly::ggplotly(prob_gl.plot)
-        prob_gt.plot = plotly::ggplotly(prob_gt.plot)
-        j_prob.plot = plotly::ggplotly(j_prob.plot)
-        pwsprob_g.plot = plotly::ggplotly(
-          ggplot(data = pwsprob_g1, aes(x = factor(.data$x, levels = unique(.data$x)),
-                                        y = factor(.data$y, levels = unique(.data$y)),
-                                        fill = .data$prob)) +
-            geom_tile() +
-            scale_fill_viridis_c(option = 'turbo', limits = c(0,1),
-                                 na.value = 'white', direction = 1) +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = 'Pr[g(x) > g(y)]') +
-            theme(axis.text.x = element_text(angle = 90),
-                  panel.background = element_blank())
-        )
-        pwsprob_gl.plot = plotly::ggplotly(
-          ggplot(data = pwsprob_gl, aes(x = factor(.data$x, levels = unique(.data$x)),
-                                        y = factor(.data$y, levels = unique(.data$y)),
-                                        fill = .data$prob)) +
-            geom_tile() +
-            scale_fill_viridis_c(option = 'turbo', limits = c(0,1),
-                                 na.value = 'white', direction = 1) +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = 'Pr[var(gl(x)) < var(gl(y))]') +
-            theme(axis.text.x = element_text(angle = 90),
-                  panel.background = element_blank())
-        )
-
-        pwsprob_gt.plot = plotly::ggplotly(
-          ggplot(data = pwsprob_gt, aes(x = factor(.data$x, levels = unique(.data$x)),
-                                        y = factor(.data$y, levels = unique(.data$y)),
-                                        fill = .data$prob)) +
-            geom_tile() +
-            scale_fill_viridis_c(option = 'turbo', limits = c(0,1),
-                                 na.value = 'white', direction = 1) +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = 'Pr[var(gt(x)) < var(gt(y))]') +
-            theme(axis.text.x = element_text(angle = 90),
-                  panel.background = element_blank())
-        )
-      }
-
-      ## Save the outputs in a list -----------------
-      marg_prob = list(
-        df = list(
-          perfo = prob_g,
-          pair_perfo = pwsprob_g,
-          stabi_gl = prob_gl,
-          pair_stabi_gl = pwsprob_gl,
-          stabi_gt = prob_gt,
-          pair_stabi_gt = pwsprob_gt,
-          joint_prob = j_prob
-        ),
-        plots = list(
-          g_hpd = g_hpd,
-          perfo = prob_g.plot,
-          pair_perfo = pwsprob_g.plot,
-          stabi_gl = prob_gl.plot,
-          pair_stabi_gl = pwsprob_gl.plot,
-          stabi_gt = prob_gt.plot,
-          pair_stabi_gt = pwsprob_gt.plot,
-          joint_prob = j_prob.plot
-        )
-      )
+      if(verbose) message('-> Joint probability of superior performance and stability estimated')
 
       ## Save data frames in the work directory -----------------
       if(save.df){
-        dir.create(path = paste0(getwd(),'/marg_prob'))
-        for (i in names(marg_prob$df)){
-          utils::write.csv(marg_prob$df[[i]],
-                           file = paste0(getwd(),'/marg_prob/',i,'.csv'),
+        dir.create(path = paste0(getwd(),'/across_probs'))
+        utils::write.csv(output$across$pair_perfo,
+                         file = paste0(getwd(),'/across_probs/pair_perfo.csv'),
+                         row.names = T)
+        for (i in names(output$across)[-grep("stabi|pair", names(output$across))]){
+          utils::write.csv(output$across[[i]],
+                           file = paste0(getwd(),'/across_probs/',i,'.csv'),
                            row.names = F)
+        }
+        for (i in names(output$across$stabi)){
+          utils::write.csv(output$across$stabi[[i]],
+                           file = paste0(getwd(),'/across_probs/stabi_',i,'.csv'),
+                           row.names = F)
+        }
+        for (i in names(output$across$pair_stabi)){
+          utils::write.csv(output$across$pair_stabi[[i]],
+                           file = paste0(getwd(),'/across_probs/pair_stabi_',i,'.csv'),
+                           row.names = T)
         }
       }
 
@@ -1782,30 +1021,9 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
       prob_ggl = suppressWarnings(Reduce(function(df1, df2) merge(df1, df2, by = 'gen', all = T), probs))
       colnames(prob_ggl)[-1] = name.loc
 
-      prob_ggl.plot = ggplot(
-        data =  stats::reshape(
-          data = prob_ggl, direction = 'long',
-          varying = list(colnames(prob_ggl)[-1]),
-          ids = name.gen, times = name.loc,
-          v.names = 'prob',
-          idvar = 'gen', timevar = 'loc'
-        ),
-        aes(x = .data$loc, y = factor(.data$gen, levels = ord_gen), fill = .data$prob)
-      ) +
-        geom_tile(colour = 'white') +
-        theme(axis.text.x = element_text(angle = 90),
-              panel.background = element_blank(),
-              legend.position = 'top') +
-        scale_fill_viridis_c(direction = 1, na.value = '#D3D7DC',
-                             limits = c(0,1), option = 'turbo') +
-        labs(x = "Location", y = 'Genotypes',
-             fill = expression(bold(Pr(g %in% Omega)))) +
-        guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5,
-                                     title.position = 'top',
-                                     title.hjust = .5)) +
-        scale_y_discrete(limits = rev)
+      output$within$perfo$gl = prob_ggl
 
-      if(verbose) message('8. Probability of superior performance within locations estimated')
+      if(verbose) message('-> Probability of superior performance within locations estimated')
 
       ## Pairwise probability of superior performance per location ----------------
 
@@ -1822,19 +1040,6 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
           a
         })
 
-        pwprobs.loc.plots = lapply(pwprobs.loc, function(x){
-          ggplot(data = x, aes(x = factor(.data$x, levels = unique(.data$x)),
-                               y = factor(.data$y, levels = unique(.data$y)),
-                               fill = .data$pwprob)) +
-            geom_tile() +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] > g[y]))))+
-            scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                 option = 'turbo')+
-            guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
-                                         title.hjust = .5)) +
-            theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-                  legend.position = c(.8,.15), legend.direction = 'horizontal')
-        })
       } else {
         pwprobs.loc = lapply(cond_ggl, function(x){
           combs = data.frame(t(utils::combn(colnames(x), 2)))
@@ -1847,24 +1052,11 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
                     }))
           a
         })
-
-        pwprobs.loc.plots = lapply(pwprobs.loc, function(x){
-          ggplot(data = x, aes(x = factor(.data$x, levels = unique(.data$x)),
-                               y = factor(.data$y, levels = unique(.data$y)),
-                               fill = .data$pwprob)) +
-            geom_tile() +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] < g[y]))))+
-            scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                 option = 'turbo')+
-            guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
-                                         title.hjust = .5)) +
-            theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-                  legend.position = c(.8,.15), legend.direction = 'horizontal')
-        })
       }
 
+      output$within$pair_perfo$gl = pwprobs.loc
 
-      if(verbose) message('9. Pairwise probability of superior performance within locations estimated')
+      if(verbose) message('-> Pairwise probability of superior performance within locations estimated')
 
       ## Probability of superior performance by year ----------------
       cond_ggt = stats::aggregate(
@@ -1892,30 +1084,9 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
       prob_ggt = suppressWarnings(Reduce(function(df1, df2) merge(df1, df2, by = 'gen', all = T), probs))
       colnames(prob_ggt)[-1] = name.year
 
-      prob_ggt.plot = ggplot(
-        data =  stats::reshape(
-          data = prob_ggt, direction = 'long',
-          varying = list(colnames(prob_ggt)[-1]),
-          ids = name.gen, times = name.year,
-          v.names = 'prob',
-          idvar = 'gen', timevar = 'year'
-        ),
-        aes(x = .data$year, y = factor(.data$gen, levels = ord_gen), fill = .data$prob)
-      ) +
-        geom_tile(colour = 'white') +
-        theme(axis.text.x = element_text(angle = 90),
-              panel.background = element_blank(),
-              legend.position = 'top') +
-        scale_fill_viridis_c(direction = 1, na.value = '#D3D7DC',
-                             limits = c(0,1), option = 'turbo') +
-        labs(x = "Year", y = 'Genotypes',
-             fill = expression(bold(Pr(g %in% Omega)))) +
-        guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5,
-                                     title.position = 'top',
-                                     title.hjust = .5))+
-        scale_y_discrete(limits = rev)
+      output$within$perfo$gt = prob_ggt
 
-      if(verbose) message('10. Probability of superior performance within year estimated')
+      if(verbose) message('-> Probability of superior performance within year estimated')
 
       ## Pairwise probability of superior performance per year ----------------
 
@@ -1932,17 +1103,6 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
           a
         })
 
-        pwprobs.year.plots = lapply(pwprobs.year, function(x){
-          ggplot(data = x, aes(x = .data$x, y = .data$y, fill = .data$pwprob)) +
-            geom_tile() +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] > g[y]))))+
-            scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                 option = 'turbo')+
-            guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
-                                         title.hjust = .5)) +
-            theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-                  legend.position = c(.8,.15), legend.direction = 'horizontal')
-        })
       } else {
         pwprobs.year = lapply(cond_ggt, function(x){
           combs = data.frame(t(utils::combn(colnames(x), 2)))
@@ -1956,168 +1116,39 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
           a
         })
 
-        pwprobs.year.plots = lapply(pwprobs.year, function(x){
-          ggplot(data = x, aes(x = .data$x, y = .data$y, fill = .data$pwprob)) +
-            geom_tile() +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] < g[y]))))+
-            scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                 option = 'turbo')+
-            guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
-                                         title.hjust = .5)) +
-            theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-                  legend.position = c(.8,.15), legend.direction = 'horizontal')
-        })
       }
 
-      if(verbose) message('11. Pairwise probability of superior performance within year estimated')
+      output$within$pair_perfo$gt = pwprobs.year
 
-      ## Transform into interactive plots -----------------
-      if(interactive){
-        prob_ggl.plot = plotly::ggplotly(
-          ggplot(
-            data =  stats::reshape(
-              data = prob_ggl, direction = 'long',
-              varying = list(colnames(prob_ggl)[-1]),
-              ids = name.gen, times = name.loc,
-              v.names = 'prob',
-              idvar = 'gen', timevar = 'loc'
-            ),
-            aes(x = .data$loc, y = factor(.data$gen, levels = ord_gen),
-                fill = .data$prob)
-          ) +
-            geom_tile(colour = 'white') +
-            theme(axis.text.x = element_text(angle = 90),
-                  panel.background = element_blank(),
-                  legend.position = 'top') +
-            scale_fill_viridis_c(direction = 1, na.value = '#D3D7DC',
-                                 limits = c(0,1), option = 'turbo') +
-            labs(x = "Locations", y = 'Genotypes',
-                 fill = expression(bold(Pr(g %in% Omega))))
-        )
+      if(verbose) message('-> Pairwise probability of superior performance within year estimated')
 
-
-        prob_ggt.plot = suppressWarnings(plotly::ggplotly(
-          ggplot(
-            data =  stats::reshape(
-              data = prob_ggt, direction = 'long',
-              varying = list(colnames(prob_ggt)[-1]),
-              ids = name.gen, times = name.year,
-              v.names = 'prob',
-              idvar = 'gen', timevar = 'year'
-            ),
-            aes(x = .data$year, y = factor(.data$gen, levels = ord_gen),
-                fill = .data$prob)
-          )  +
-            geom_tile(colour = 'white', na.rm = T) +
-            theme(axis.text.x = element_text(angle = 90),
-                  panel.background = element_blank(),
-                  legend.position = 'top') +
-            scale_fill_viridis_c(direction = 1, na.value = '#D3D7DC',
-                                 limits = c(0,1), option = 'turbo') +
-            labs(x = "Year", y = 'Genotypes',
-                 fill = expression(bold(Pr(g %in% Omega))))
-        ))
-
-        if(increase){
-          pwprobs.loc_plots = lapply(pwprobs.loc, function(x){
-            plotly::ggplotly(
-              ggplot(data = x, aes(x = .data$x, y = .data$y, fill = .data$pwprob)) +
-                geom_tile() +
-                labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] > g[y]))))+
-                scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                     option = 'turbo') +
-                theme(axis.text.x = element_text(angle = 90),
-                      panel.background = element_blank())
-            )
-          })
-        } else {
-          pwprobs.loc_plots = lapply(pwprobs.loc, function(x){
-            plotly::ggplotly(
-              ggplot(data = x, aes(x = .data$x, y = .data$y, fill = .data$pwprob)) +
-                geom_tile() +
-                labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] < g[y]))))+
-                scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                     option = 'turbo') +
-                theme(axis.text.x = element_text(angle = 90),
-                      panel.background = element_blank())
-            )
-          })
-        }
-
-
-        if(increase){
-          pwprobs.year.plots = lapply(pwprobs.year, function(x){
-            plotly::ggplotly(
-              ggplot(data = x, aes(x = .data$x, y = .data$y, fill = .data$pwprob)) +
-                geom_tile() +
-                labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] > g[y]))))+
-                scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                     option = 'turbo') +
-                theme(axis.text.x = element_text(angle = 90),
-                      panel.background = element_blank())
-            )
-          })
-        } else {
-          pwprobs.year.plots = lapply(pwprobs.year, function(x){
-            plotly::ggplotly(
-              ggplot(data = x, aes(x = .data$x, y = .data$y, fill = .data$pwprob)) +
-                geom_tile() +
-                labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] < g[y]))))+
-                scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                     option = 'turbo') +
-                theme(axis.text.x = element_text(angle = 90),
-                      panel.background = element_blank())
-            )
-          })
-        }
-
-      }
-
-      ## Save the outputs in a list -----------------
-      cond_prob = list(
-        df = list(
-          prob_loc = prob_ggl,
-          prob_year = prob_ggt,
-          pwprob_loc = pwprobs.loc,
-          pwprob_year = pwprobs.year
-        ),
-        plots = list(
-          prob_loc = prob_ggl.plot,
-          prob_year = prob_ggt.plot,
-          pwprob_loc = pwprobs.loc.plots,
-          pwprob_year = pwprobs.year.plots
-        )
-      )
 
       ## Save data frames in the work directory -----------------
 
       if(save.df){
-        dir.create(path = paste0(getwd(),'/cond_prob'))
+        dir.create(path = paste0(getwd(),'/within'))
         utils::write.csv(prob_ggl,
-                         file = paste0(getwd(),'/cond_prob/prob_loc.csv'),
+                         file = paste0(getwd(),'/within_probs/prob_ggl.csv'),
                          row.names = F)
-
         utils::write.csv(prob_ggt,
-                         file = paste0(getwd(),'/cond_prob/prob_year.csv'),
+                         file = paste0(getwd(),'/within_probs/prob_ggt.csv'),
                          row.names = F)
-        dir.create(path = paste0(getwd(),'/cond_prob/pairwise_loc'))
+        dir.create(path = paste0(getwd(),'/within_probs/pairwise_ggl'))
         for (i in names(pwprobs.loc)){
           utils::write.csv(pwprobs.loc[[i]],
-                           file = paste0(getwd(),'/cond_prob/pairwise_loc/',i,'.csv'),
+                           file = paste0(getwd(),'/within_probs/pairwise_ggl/',i,'.csv'),
                            row.names = F)
         }
-
-        dir.create(path = paste0(getwd(),'/cond_prob/pairwise_year'))
+        dir.create(path = paste0(getwd(),'/within_probs/pairwise_ggt'))
         for (i in names(pwprobs.year)){
           utils::write.csv(pwprobs.year[[i]],
-                           file = paste0(getwd(),'/cond_prob/pairwise_year/',i,'.csv'),
+                           file = paste0(getwd(),'/within_probs/pairwise_ggt/',i,'.csv'),
                            row.names = F)
         }
       }
 
       # Final output -----------
       if(verbose) message('Process completed!')
-      output = list(marginal = marg_prob, conditional = cond_prob)
       return(output)
 
     }
@@ -2140,24 +1171,27 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
       aux = unique(data[,c(gen,loc,reg)])
       Z1 = stats::model.matrix(~-1 + aux[,gen])
       Z2 = stats::model.matrix(~-1 + aux[,gen]:aux[,loc])
+      if(any(colSums(Z2) == 0)){
+        mod$post$gl = mod$post$gl[,-which(colSums(Z2) == 0)]
+        Z2 = Z2[,-which(colSums(Z2) == 0)]
+      }
       Z4 = stats::model.matrix(~-1 + aux[,gen]:aux[,reg])
+      if(any(colSums(Z4) == 0)){
+        mod$post$gm = mod$post$gm[,-which(colSums(Z4) == 0)]
+        Z4 = Z4[,-which(colSums(Z4) == 0)]
+      }
 
       # Genotypic effects and their HPD ------------
       g_hpd = data.frame(
         gen = name.gen,
         g = apply(mod$post$g, 2, stats::median),
-        UP = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.95)),
-        up = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.975)),
-        DOWN = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.05)),
-        down = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.025)),
+        HPD95 = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.95)),
+        HPD97.5 = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.975)),
+        HPD5 = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.05)),
+        HPD7.5 = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.025)),
         row.names = NULL
       )
-
-      g_hpd = ggplot(data = g_hpd, aes(x = .data$g, y = reorder(.data$gen, .data$g))) +
-        geom_errorbar(aes(xmin = .data$down, xmax = .data$up), width = 0)+
-        geom_errorbar(aes(xmin = .data$DOWN, xmax = .data$UP), width = 0, linewidth = 2, alpha = .8) +
-        labs(x = 'Genotypic main effects (HPD)', y = 'Genotypes') +
-        geom_point(size = 4, color = '#33a02c')
+      output$across$g_hpd = g_hpd
 
 
       # Marginal probabilities ----------------
@@ -2181,16 +1215,10 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
       rownames(ind_post) = name.gen
       prob_g = data.frame(ID = rownames(ind_post), prob = rowMeans(ind_post), row.names = NULL)
       prob_g = prob_g[order(prob_g$prob, decreasing = T),]
-      prob_g.plot = ggplot(prob_g) +
-        geom_segment(aes(x = factor(.data$ID, levels = .data$ID), xend = .data$ID,
-                         y = 0, yend = .data$prob), linewidth = 1) +
-        geom_point(aes(x = factor(.data$ID, levels = .data$ID), y = .data$prob),
-                   size = 2, color = 'black', fill = alpha('#33a02c', 0.3),
-                   alpha = 0.7, shape = 21, stroke = .4) +
-        labs(x = 'Genotypes', y = 'Probability of superior performance') +
-        theme(axis.text.x = element_text(angle = 90)) # + ylim(0,1)
 
-      if(verbose) message('1. Probability of superior performance estimated')
+      if(verbose) message('-> Probability of superior performance estimated')
+
+      output$across$perfo = prob_g
 
       ord_gen = factor(prob_g$ID, levels = prob_g$ID)
 
@@ -2213,66 +1241,21 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
       }
 
       colnames(pwsprob_g) = rownames(pwsprob_g) = unlist(strsplit(rownames(pwsprob_g), split = '_@#'))
-      pwsprob_g1 = pwsprob_g[match(prob_g$ID, rownames(pwsprob_g)),
-                             match(prob_g$ID, rownames(pwsprob_g))]
-      pwsprob_g1[upper.tri(pwsprob_g1, diag = T)] = NA
-      pwsprob_g1 = stats::reshape(
-        data.frame(pwsprob_g1),
-        direction = 'long',
-        varying = list(colnames(data.frame(pwsprob_g1))),
-        idvar = 'y', timevar = 'x',
-        ids = rownames(pwsprob_g1), times = colnames(pwsprob_g1),
-        new.row.names = NULL, v.names = 'prob'
-      )
+      output$across$pair_perfo = pwsprob_g
 
-      if(increase){
-        pwsprob_g.plot = ggplot(pwsprob_g1,
-                                aes(x = factor(.data$x,
-                                               levels = unique(.data$x)),
-                                    y = factor(.data$y,
-                                               levels = unique(.data$y))))+
-          geom_tile(aes(fill = .data$prob), colour = 'white') +
-          labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] > g[y]))))+
-          theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-                legend.position = c(.8,.15), legend.direction = 'horizontal')+
-          scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                               option = 'turbo')+
-          guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
-                                       title.hjust = .5))
-      } else {
-        pwsprob_g.plot = ggplot(pwsprob_g1,
-                                aes(x = factor(.data$x,
-                                               levels = unique(.data$x)),
-                                    y = factor(.data$y,
-                                               levels = unique(.data$y))))+
-          geom_tile(aes(fill = .data$prob), colour = 'white') +
-          labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] < g[y]))))+
-          theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-                legend.position = c(.8,.15), legend.direction = 'horizontal')+
-          scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                               option = 'turbo')+
-          guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
-                                       title.hjust = .5))
-      }
-
-      pwsprob_g[upper.tri(pwsprob_g, diag = T)] = NA
-      pwsprob_g = stats::reshape(
-        data.frame(pwsprob_g),
-        direction = 'long',
-        varying = list(colnames(data.frame(pwsprob_g))),
-        idvar = 'y', timevar = 'x',
-        ids = rownames(pwsprob_g), times = colnames(pwsprob_g),
-        new.row.names = 1:length(c(pwsprob_g)), v.names = 'prob'
-      )
-      pwsprob_g = stats::na.exclude(pwsprob_g[order(pwsprob_g$x),])
-
-      if(verbose) message('2. Pairwise probability of superior performance estimated')
+      if(verbose) message('-> Pairwise probability of superior performance estimated')
 
       ## Probability of superior stability - Location -----------------
       staprob_gl = mod$post$gl
       colnames(staprob_gl) = sub(
         'Gen_@#','',do.call(rbind,strsplit(colnames(staprob_gl),'_@#loc'))[,1]
       )
+      if(any(table(colnames(staprob_gl)) == 1)){
+        oncegeno =  names(table(colnames(staprob_gl))[which(table(colnames(staprob_gl)) == 1)])
+        staprob_gl = staprob_gl[,-which(colnames(staprob_gl) %in% oncegeno)]
+        warning("Some genotypes were evaluated in only one location (environment), so we could not compute their stability: ",
+                paste(oncegeno, collapse = ", "))
+      }
       probsta = do.call(cbind, lapply(
         lapply(
           name.gen, function(x) staprob_gl[,grep(paste0(x,'$'), colnames(staprob_gl))]
@@ -2287,16 +1270,10 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
       rownames(ind_post) = name.gen
       prob_gl = data.frame(ID = rownames(ind_post), prob = rowMeans(ind_post), row.names = NULL)
       prob_gl = prob_gl[order(prob_gl$prob, decreasing = T),]
-      prob_gl.plot = ggplot(prob_gl)+
-        geom_segment(aes(x = factor(.data$ID, levels = .data$ID), xend = .data$ID,
-                         y = 0, yend = .data$prob), linewidth = 1) +
-        geom_point(aes(x = factor(.data$ID, levels = .data$ID), y = .data$prob),
-                   size = 2, color = 'black', fill = alpha('#33a02c', 0.3),
-                   alpha = 0.7, shape = 21, stroke = .4) +
-        labs(x = 'Genotypes', y = 'Probability of superior stability') +
-        theme(axis.text.x = element_text(angle = 90)) #+ ylim(0,1)
 
-      if(verbose) message('3. Probability of superior stability (GL) estimated')
+      output$across$stabi$gl = prob_gl
+
+      if(verbose) message('-> Probability of superior stability (GL) estimated')
 
       ## Pairwise probability of superior stability - Location -------------
       pwsprob_gl = matrix(NA, num.gen, num.gen,
@@ -2306,47 +1283,22 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
           pwsprob_gl[i,j] = mean(probsta[,j] < probsta[,i])
         }
       }
-      pwsprob_gl1 = pwsprob_gl[match(prob_gl$ID, rownames(pwsprob_gl)),
-                               match(prob_gl$ID, rownames(pwsprob_gl))]
-      pwsprob_gl1[upper.tri(pwsprob_gl1, diag = T)] = NA
-      pwsprob_gl1 = stats::reshape(
-        data.frame(pwsprob_gl1),
-        direction = 'long',
-        varying = list(colnames(data.frame(pwsprob_gl1))),
-        idvar = 'y', timevar = 'x',
-        ids = rownames(pwsprob_gl1), times = colnames(pwsprob_gl1),
-        new.row.names = NULL, v.names = 'prob'
-      )
-      pwsprob_gl.plot = ggplot(pwsprob_gl1,
-                               aes(x = factor(.data$x, levels = unique(.data$x)),
-                                   y = factor(.data$y, levels = unique(.data$y))))+
-        geom_tile(aes(fill = .data$prob), colour = 'white')+
-        labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold("Pr["~var(gl[x]) < var(gl[y])~"]")))+
-        theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-              legend.position = c(.8,.15), legend.direction = 'horizontal')+
-        scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                             option = 'turbo')+
-        guides(fill = guide_colorbar(barwidth = 9, barheight = 1.5, title.position = 'top',
-                                     title.hjust = .5))
 
-      pwsprob_gl[upper.tri(pwsprob_gl, diag = T)] = NA
-      pwsprob_gl = stats::reshape(
-        data.frame(pwsprob_gl),
-        direction = 'long',
-        varying = list(colnames(data.frame(pwsprob_gl))),
-        idvar = 'y', timevar = 'x',
-        ids = rownames(pwsprob_gl), times = colnames(pwsprob_gl),
-        new.row.names = 1:length(c(pwsprob_gl)), v.names = 'prob'
-      )
-      pwsprob_gl = stats::na.exclude(pwsprob_gl[order(pwsprob_gl$x),])
+      output$across$pair_stabi$gl = pwsprob_gl
 
-      if(verbose) message('4. Pairwise probability of superior stability (GL) estimated')
+      if(verbose) message('-> Pairwise probability of superior stability (GL) estimated')
 
       ## Probability of superior stability - Region --------------
       staprob_gm = mod$post$gm
       colnames(staprob_gm) = sub(
         'Gen_@#','',do.call(rbind,strsplit(colnames(staprob_gm),'_@#Reg'))[,1]
       )
+      if(any(table(colnames(staprob_gm)) == 1)){
+        oncegeno =  names(table(colnames(staprob_gm))[which(table(colnames(staprob_gm)) == 1)])
+        staprob_gm = staprob_gm[,-which(colnames(staprob_gm) %in% oncegeno)]
+        warning("Some genotypes were evaluated in only one region, so we could not compute their stability: ",
+                paste(oncegeno, collapse = ", "))
+      }
       probsta = do.call(cbind, lapply(
         lapply(
           name.gen, function(x) staprob_gm[,grep(paste0(x,'$'), colnames(staprob_gm))]
@@ -2361,16 +1313,10 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
       rownames(ind_post) = name.gen
       prob_gm = data.frame(ID = rownames(ind_post), prob = rowMeans(ind_post), row.names = NULL)
       prob_gm = prob_gm[order(prob_gm$prob, decreasing = T),]
-      prob_gm.plot = ggplot(prob_gm)+
-        geom_segment(aes(x = factor(.data$ID, levels = .data$ID), xend = .data$ID,
-                         y = 0, yend = .data$prob), linewidth = 1) +
-        geom_point(aes(x = factor(.data$ID, levels = .data$ID), y = .data$prob),
-                   size = 2, color = 'black', fill = alpha('#33a02c', 0.3),
-                   alpha = 0.7, shape = 21, stroke = .4) +
-        labs(x = 'Genotypes', y = 'Probability of superior stability') +
-        theme(axis.text.x = element_text(angle = 90)) #+ ylim(0,1)
 
-      if(verbose) message('5. Probability of superior stability (GM) estimated')
+      output$across$stabi$gm = prob_gm
+
+      if(verbose) message('-> Probability of superior stability (GM) estimated')
 
 
       ## Pairwise probability of superior stability - Region -----------------
@@ -2381,41 +1327,9 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
           pwsprob_gm[i,j] = mean(probsta[,j] < probsta[,i])
         }
       }
-      pwsprob_gm1 = pwsprob_gm[match(prob_gm$ID, rownames(pwsprob_gm)),
-                               match(prob_gm$ID, rownames(pwsprob_gm))]
-      pwsprob_gm1[upper.tri(pwsprob_gm1, diag = T)] = NA
-      pwsprob_gm1 = stats::reshape(
-        data.frame(pwsprob_gm1),
-        direction = 'long',
-        varying = list(colnames(data.frame(pwsprob_gm1))),
-        idvar = 'y', timevar = 'x',
-        ids = rownames(pwsprob_gm1), times = colnames(pwsprob_gm1),
-        new.row.names = NULL, v.names = 'prob'
-      )
-      pwsprob_gm.plot = ggplot(pwsprob_gm1,
-                               aes(x = factor(.data$x, levels = unique(.data$x)),
-                                   y = factor(.data$y, levels = unique(.data$y))))+
-        geom_tile(aes(fill = .data$prob), colour = 'white')+
-        labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold("Pr["~var(gm[x]) < var(gm[y])~"]")))+
-        theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-              legend.position = c(.8,.15), legend.direction = 'horizontal')+
-        scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                             option = 'turbo')+
-        guides(fill = guide_colorbar(barwidth = 9, barheight = 1.5, title.position = 'top',
-                                     title.hjust = .5))
+      output$across$pair_stabi$gm = pwsprob_gm
 
-      pwsprob_gm[upper.tri(pwsprob_gm, diag = T)] = NA
-      pwsprob_gm = stats::reshape(
-        data.frame(pwsprob_gm),
-        direction = 'long',
-        varying = list(colnames(data.frame(pwsprob_gm))),
-        idvar = 'y', timevar = 'x',
-        ids = rownames(pwsprob_gm), times = colnames(pwsprob_gm),
-        new.row.names = 1:length(c(pwsprob_gm)), v.names = 'prob'
-      )
-      pwsprob_gm = stats::na.exclude(pwsprob_gm[order(pwsprob_gm$x),])
-
-      if(verbose) message('6. Pairwise probability of superior stability (GM) estimated')
+      if(verbose) message('-> Pairwise probability of superior stability (GM) estimated')
 
       ## Joint probability of superior performance and stability -----------------
       j_prob = rbind(merge(prob_g, prob_gl, by = 'ID'),
@@ -2423,7 +1337,7 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
 
       j_prob$joint = j_prob[,2] * j_prob[,3]
       colnames(j_prob) = c('ID', 'Performance', 'Stability', 'Joint')
-      j_prob$lev = rep(c('Location', 'Region'), each = num.gen)
+      j_prob$lev = rep(c(c(loc, reg)), each = num.gen)
       j_prob = stats::reshape(j_prob, direction = 'long', varying = list(2:4),
                               times = colnames(j_prob)[2:4], v.names = 'value')
       j_prob = j_prob[,-5]
@@ -2433,94 +1347,30 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
 
       j_prob = j_prob[j_prob$category == "Joint",]
 
-      retrieve = function(x) do.call(rbind, strsplit(x, '@#_'))[,1]
+      output$across$joint = j_prob
 
-      j_prob.plot = ggplot(cbind(j_prob, V4 = paste(j_prob$ID, j_prob$level, sep = '@#_')),
-                           aes(x = stats::reorder(.data$V4, -.data$prob), y = .data$prob)) +
-        facet_wrap(.~.data$level, ncol = 1, scales = "free_x") +
-        theme(axis.text.x = element_text(angle = 90)) +
-        scale_x_discrete(labels = retrieve) +
-        geom_segment(aes(x = reorder(.data$V4, -.data$prob), xend = .data$V4,
-                         y = 0, yend = .data$prob), linewidth = 1) +
-        geom_point(size = 2, color = 'black', fill = alpha('#33a02c', 0.3),
-                   alpha = 0.7, shape = 21, stroke = .4) +
-        labs(x = "Genotype", y = "Joint probability")
-
-      if(verbose) message('7. Joint probability of superior performance and stability estimated')
-
-      ## Transform into interactive plots -----------------
-
-      if(interactive){
-        g_hpd = plotly::ggplotly(g_hpd)
-        prob_g.plot = plotly::ggplotly(prob_g.plot)
-        prob_gl.plot = plotly::ggplotly(prob_gl.plot)
-        prob_gm.plot = plotly::ggplotly(prob_gm.plot)
-        j_prob.plot = plotly::ggplotly(j_prob.plot)
-        pwsprob_g.plot = plotly::ggplotly(
-          ggplot(data = pwsprob_g1, aes(x = factor(.data$x, levels = unique(.data$x)),
-                                        y = factor(.data$y, levels = unique(.data$y)),
-                                        fill = .data$prob)) +
-            geom_tile() +
-            scale_fill_viridis_c(option = 'turbo', limits = c(0,1),
-                                 na.value = 'white', direction = 1) +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = 'Pr[g(x) > g(y)]') +
-            theme(axis.text.x = element_text(angle = 90),
-                  panel.background = element_blank())
-        )
-        pwsprob_gl.plot = plotly::ggplotly(
-          ggplot(data = pwsprob_gl, aes(x = factor(.data$x, levels = unique(.data$x)),
-                                        y = factor(.data$y, levels = unique(.data$y)),
-                                        fill = .data$prob)) +
-            geom_tile() +
-            scale_fill_viridis_c(option = 'turbo', limits = c(0,1),
-                                 na.value = 'white', direction = 1) +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = 'Pr[var(gl(x)) < var(gl(y))]') +
-            theme(axis.text.x = element_text(angle = 90),
-                  panel.background = element_blank())
-        )
-        pwsprob_gm.plot = plotly::ggplotly(
-          ggplot(data = pwsprob_gm, aes(x = factor(.data$x, levels = unique(.data$x)),
-                                        y = factor(.data$y, levels = unique(.data$y)),
-                                        fill = .data$prob)) +
-            geom_tile() +
-            scale_fill_viridis_c(option = 'turbo', limits = c(0,1),
-                                 na.value = 'white', direction = 1) +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = 'Pr[var(gm(x)) < var(gm(y))]') +
-            theme(axis.text.x = element_text(angle = 90),
-                  panel.background = element_blank())
-        )
-      }
-
-      ## Save the outputs in a list -----------------
-      marg_prob = list(
-        df = list(
-          perfo = prob_g,
-          pair_perfo = pwsprob_g,
-          stabi_gl = prob_gl,
-          pair_stabi_gl = pwsprob_gl,
-          stabi_gm = prob_gm,
-          pair_stabi_gm = pwsprob_gm,
-          joint_prob = j_prob
-        ),
-        plots = list(
-          g_hpd = g_hpd,
-          perfo = prob_g.plot,
-          pair_perfo = pwsprob_g.plot,
-          stabi_gl = prob_gl.plot,
-          pair_stabi_gl = pwsprob_gl.plot,
-          stabi_gm = prob_gm.plot,
-          pair_stabi_gm = pwsprob_gm.plot,
-          joint_prob = j_prob.plot
-        )
-      )
+      if(verbose) message('-> Joint probability of superior performance and stability estimated')
 
       ## Save data frames in the work directory -----------------
       if(save.df){
-        dir.create(path = paste0(getwd(),'/marg_prob'))
-        for (i in names(marg_prob$df)){
-          utils::write.csv(marg_prob$df[[i]],
-                           file = paste0(getwd(),'/marg_prob/',i,'.csv'),
+        dir.create(path = paste0(getwd(),'/across_probs'))
+        utils::write.csv(output$across$pair_perfo,
+                         file = paste0(getwd(),'/across_probs/pair_perfo.csv'),
+                         row.names = T)
+        for (i in names(output$across)[-grep("stabi|pair", names(output$across))]){
+          utils::write.csv(output$across[[i]],
+                           file = paste0(getwd(),'/across_probs/',i,'.csv'),
                            row.names = F)
+        }
+        for (i in names(output$across$stabi)){
+          utils::write.csv(output$across$stabi[[i]],
+                           file = paste0(getwd(),'/across_probs/stabi_',i,'.csv'),
+                           row.names = F)
+        }
+        for (i in names(output$across$pair_stabi)){
+          utils::write.csv(output$across$pair_stabi[[i]],
+                           file = paste0(getwd(),'/across_probs/pair_stabi_',i,'.csv'),
+                           row.names = T)
         }
       }
 
@@ -2573,30 +1423,9 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
       prob_ggl = suppressWarnings(Reduce(function(df1, df2) merge(df1, df2, by = 'gen', all = T), probs))
       colnames(prob_ggl)[-1] = name.loc
 
-      prob_ggl.plot = ggplot(
-        data =  stats::reshape(
-          data = prob_ggl, direction = 'long',
-          varying = list(colnames(prob_ggl)[-1]),
-          ids = name.gen, times = name.loc,
-          v.names = 'prob',
-          idvar = 'gen', timevar = 'loc'
-        ),
-        aes(x = .data$loc, y = factor(.data$gen, levels = ord_gen), fill = .data$prob)
-      ) +
-        geom_tile(colour = 'white') +
-        theme(axis.text.x = element_text(angle = 90),
-              panel.background = element_blank(),
-              legend.position = 'top') +
-        scale_fill_viridis_c(direction = 1, na.value = '#D3D7DC',
-                             limits = c(0,1), option = 'turbo') +
-        labs(x = "Locations", y = 'Genotypes',
-             fill = expression(bold(Pr(g %in% Omega)))) +
-        guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5,
-                                     title.position = 'top',
-                                     title.hjust = .5)) +
-        scale_y_discrete(limits = rev)
+      output$within$perfo$gl = prob_ggl
 
-      if(verbose) message('8. Probability of superior performance within locations estimated')
+      if(verbose) message('-> Probability of superior performance within locations estimated')
 
       ## Pairwise probability of superior performance per location ----------------
 
@@ -2613,19 +1442,6 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
           a
         })
 
-        pwprobs.loc.plots = lapply(pwprobs.loc, function(x){
-          ggplot(data = x, aes(x = factor(.data$x, levels = unique(.data$x)),
-                               y = factor(.data$y, levels = unique(.data$y)),
-                               fill = .data$pwprob)) +
-            geom_tile() +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] > g[y]))))+
-            scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                 option = 'turbo')+
-            guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
-                                         title.hjust = .5)) +
-            theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-                  legend.position = c(.8,.15), legend.direction = 'horizontal')
-        })
       } else {
         pwprobs.loc = lapply(cond_ggl, function(x){
           combs = data.frame(t(utils::combn(colnames(x), 2)))
@@ -2638,24 +1454,11 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
                     }))
           a
         })
-
-        pwprobs.loc.plots = lapply(pwprobs.loc, function(x){
-          ggplot(data = x, aes(x = factor(.data$x, levels = unique(.data$x)),
-                               y = factor(.data$y, levels = unique(.data$y)),
-                               fill = .data$pwprob)) +
-            geom_tile() +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] < g[y]))))+
-            scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                 option = 'turbo')+
-            guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
-                                         title.hjust = .5)) +
-            theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-                  legend.position = c(.8,.15), legend.direction = 'horizontal')
-        })
       }
 
+      output$within$pair_perfo$gl = pwprobs.loc
 
-      if(verbose) message('9. Pairwise probability of superior performance within locations estimated')
+      if(verbose) message('-> Pairwise probability of superior performance within locations estimated')
 
       ## Probability of superior performance by Region ----------------
       cond_ggm = stats::aggregate(
@@ -2683,30 +1486,9 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
       prob_ggm = suppressWarnings(Reduce(function(df1, df2) merge(df1, df2, by = 'gen', all = T), probs))
       colnames(prob_ggm)[-1] = name.reg
 
-      prob_ggm.plot = ggplot(
-        data =  stats::reshape(
-          data = prob_ggm, direction = 'long',
-          varying = list(colnames(prob_ggm)[-1]),
-          ids = name.gen, times = name.reg,
-          v.names = 'prob',
-          idvar = 'gen', timevar = 'reg'
-        ),
-        aes(x = .data$reg, y = factor(.data$gen, levels = ord_gen), fill = .data$prob)
-      ) +
-        geom_tile(colour = 'white') +
-        theme(axis.text.x = element_text(angle = 90),
-              panel.background = element_blank(),
-              legend.position = 'top') +
-        scale_fill_viridis_c(direction = 1, na.value = '#D3D7DC',
-                             limits = c(0,1), option = 'turbo') +
-        labs(x = "Regions", y = 'Genotypes',
-             fill = expression(bold(Pr(g %in% Omega)))) +
-        guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5,
-                                     title.position = 'top',
-                                     title.hjust = .5))+
-        scale_y_discrete(limits = rev)
+      output$within$perfo$gm = prob_ggm
 
-      if(verbose) message('10. Probability of superior performance within regions estimated')
+      if(verbose) message('-> Probability of superior performance within regions estimated')
 
       ## Pairwise probability of superior performance per Region ----------------
 
@@ -2723,17 +1505,6 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
           a
         })
 
-        pwprobs.reg.plots = lapply(pwprobs.reg, function(x){
-          ggplot(data = x, aes(x = .data$x, y = .data$y, fill = .data$pwprob)) +
-            geom_tile() +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] > g[y]))))+
-            scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                 option = 'turbo')+
-            guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
-                                         title.hjust = .5)) +
-            theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-                  legend.position = c(.8,.15), legend.direction = 'horizontal')
-        })
       } else {
         pwprobs.reg = lapply(cond_ggm, function(x){
           combs = data.frame(t(utils::combn(colnames(x), 2)))
@@ -2747,194 +1518,67 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
           a
         })
 
-        pwprobs.reg.plots = lapply(pwprobs.reg, function(x){
-          ggplot(data = x, aes(x = .data$x, y = .data$y, fill = .data$pwprob)) +
-            geom_tile() +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] < g[y]))))+
-            scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                 option = 'turbo')+
-            guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
-                                         title.hjust = .5)) +
-            theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-                  legend.position = c(.8,.15), legend.direction = 'horizontal')
-        })
       }
 
-      if(verbose) message('11. Pairwise probability of superior performance within regions estimated')
+      output$within$pair_perfo$gm = pwprobs.reg
 
-      ## Transform into interactive plots -----------------
-      if(interactive){
-        prob_ggl.plot = plotly::ggplotly(
-          ggplot(
-            data =  stats::reshape(
-              data = prob_ggl, direction = 'long',
-              varying = list(colnames(prob_ggl)[-1]),
-              ids = name.gen, times = name.loc,
-              v.names = 'prob',
-              idvar = 'gen', timevar = 'loc'
-            ),
-            aes(x = .data$loc, y = factor(.data$gen, levels = ord_gen),
-                fill = .data$prob)
-          ) +
-            geom_tile(colour = 'white') +
-            theme(axis.text.x = element_text(angle = 90),
-                  panel.background = element_blank(),
-                  legend.position = 'top') +
-            scale_fill_viridis_c(direction = 1, na.value = '#D3D7DC',
-                                 limits = c(0,1), option = 'turbo') +
-            labs(x = "Locations", y = 'Genotypes',
-                 fill = expression(bold(Pr(g %in% Omega))))
-        )
-
-        prob_ggm.plot = suppressWarnings(plotly::ggplotly(
-          ggplot(
-            data =  stats::reshape(
-              data = prob_ggm, direction = 'long',
-              varying = list(colnames(prob_ggm)[-1]),
-              ids = name.gen, times = name.reg,
-              v.names = 'prob',
-              idvar = 'gen', timevar = 'reg'
-            ),
-            aes(x = .data$reg, y = factor(.data$gen, levels = ord_gen),
-                fill = .data$prob)
-          )  +
-            geom_tile(colour = 'white', na.rm = T) +
-            theme(axis.text.x = element_text(angle = 90),
-                  panel.background = element_blank(),
-                  legend.position = 'top') +
-            scale_fill_viridis_c(direction = 1, na.value = '#D3D7DC',
-                                 limits = c(0,1), option = 'turbo') +
-            labs(x = "Region", y = 'Genotypes',
-                 fill = expression(bold(Pr(g %in% Omega))))
-        ))
-
-        if(increase){
-          pwprobs.loc_plots = lapply(pwprobs.loc, function(x){
-            plotly::ggplotly(
-              ggplot(data = x, aes(x = .data$x, y = .data$y, fill = .data$pwprob)) +
-                geom_tile() +
-                labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] > g[y]))))+
-                scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                     option = 'turbo') +
-                theme(axis.text.x = element_text(angle = 90),
-                      panel.background = element_blank())
-            )
-          })
-        } else {
-          pwprobs.loc_plots = lapply(pwprobs.loc, function(x){
-            plotly::ggplotly(
-              ggplot(data = x, aes(x = .data$x, y = .data$y, fill = .data$pwprob)) +
-                geom_tile() +
-                labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] < g[y]))))+
-                scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                     option = 'turbo') +
-                theme(axis.text.x = element_text(angle = 90),
-                      panel.background = element_blank())
-            )
-          })
-        }
-
-        if(increase){
-          pwprobs.reg.plots = lapply(pwprobs.reg, function(x){
-            plotly::ggplotly(
-              ggplot(data = x, aes(x = .data$x, y = .data$y, fill = .data$pwprob)) +
-                geom_tile() +
-                labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] > g[y]))))+
-                scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                     option = 'turbo') +
-                theme(axis.text.x = element_text(angle = 90),
-                      panel.background = element_blank())
-            )
-          })
-        } else {
-          pwprobs.reg.plots = lapply(pwprobs.reg, function(x){
-            plotly::ggplotly(
-              ggplot(data = x, aes(x = .data$x, y = .data$y, fill = .data$pwprob)) +
-                geom_tile() +
-                labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] < g[y]))))+
-                scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                     option = 'turbo') +
-                theme(axis.text.x = element_text(angle = 90),
-                      panel.background = element_blank())
-            )
-          })
-        }
-
-      }
-
-      ## Save the outputs in a list -----------------
-      cond_prob = list(
-        df = list(
-          prob_loc = prob_ggl,
-          prob_reg = prob_ggm,
-          pwprob_loc = pwprobs.loc,
-          pwprob_reg = pwprobs.reg
-        ),
-        plots = list(
-          prob_loc = prob_ggl.plot,
-          prob_reg = prob_ggm.plot,
-          pwprob_loc = pwprobs.loc.plots,
-          pwprob_reg = pwprobs.reg.plots
-        )
-      )
+      if(verbose) message('-> Pairwise probability of superior performance within regions estimated')
 
       ## Save data frames in the work directory -----------------
 
       if(save.df){
-        dir.create(path = paste0(getwd(),'/cond_prob'))
+        dir.create(path = paste0(getwd(),'/within'))
         utils::write.csv(prob_ggl,
-                         file = paste0(getwd(),'/cond_prob/prob_loc.csv'),
+                         file = paste0(getwd(),'/within_probs/prob_ggl.csv'),
                          row.names = F)
         utils::write.csv(prob_ggm,
-                         file = paste0(getwd(),'/cond_prob/prob_reg.csv'),
+                         file = paste0(getwd(),'/within_probs/prob_ggm.csv'),
                          row.names = F)
-
-        dir.create(path = paste0(getwd(),'/cond_prob/pairwise_loc'))
+        dir.create(path = paste0(getwd(),'/within_probs/pairwise_ggl'))
         for (i in names(pwprobs.loc)){
           utils::write.csv(pwprobs.loc[[i]],
-                           file = paste0(getwd(),'/cond_prob/pairwise_loc/',i,'.csv'),
+                           file = paste0(getwd(),'/within_probs/pairwise_ggl/',i,'.csv'),
                            row.names = F)
         }
-        dir.create(path = paste0(getwd(),'/cond_prob/pairwise_reg'))
+        dir.create(path = paste0(getwd(),'/within_probs/pairwise_ggm'))
         for (i in names(pwprobs.reg)){
           utils::write.csv(pwprobs.reg[[i]],
-                           file = paste0(getwd(),'/cond_prob/pairwise_reg/',i,'.csv'),
+                           file = paste0(getwd(),'/within_probs/pairwise_ggm/',i,'.csv'),
                            row.names = F)
         }
-
       }
 
       # Final output -----------
       if(verbose) message('Process completed!')
-      output = list(marginal = marg_prob, conditional = cond_prob)
       return(output)
 
     }
     else # Without region info --------------------
     {
-      colnames(mod$post$gl) = paste('Gen',rep(name.gen,  times = num.loc),
-                                    "loc", rep(name.loc,  each = num.gen), sep = '_@#')
-
       aux = unique(data[,c(gen,loc)])
       Z1 = stats::model.matrix(~-1 + aux[,gen])
+      colnames(Z1) = gsub("aux\\[, gen\\]",'', colnames(Z1))
       Z2 = stats::model.matrix(~-1 + aux[,gen]:aux[,loc])
+      if(any(colSums(Z2) == 0 & ncol(Z2) == ncol(mod$post$gl))){
+        mod$post$gl = mod$post$gl[,-which(colSums(Z2) == 0)]
+        Z2 = Z2[,-which(colSums(Z2) == 0)]
+      }else if(any(colSums(Z2) == 0)){
+        Z2 = Z2[,-which(colSums(Z2) == 0)]
+      }
+      colnames(Z2) = gsub("aux\\[, gen\\]",'', gsub("aux\\[, loc\\]",'_@#', colnames(Z2)))
+      colnames(mod$post$gl) = paste("Gen",aux[,1], "loc", aux[,2], sep = "_@#")
 
       # Genotypic effects and their HPD ------------
       g_hpd = data.frame(
         gen = name.gen,
         g = apply(mod$post$g, 2, stats::median),
-        UP = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.95)),
-        up = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.975)),
-        DOWN = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.05)),
-        down = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.025)),
+        HPD95 = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.95)),
+        HPD97.5 = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.975)),
+        HPD5 = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.05)),
+        HPD7.5 = apply(mod$post$g, 2, function(x) stats::quantile(x, probs = 0.025)),
         row.names = NULL
       )
-
-      g_hpd = ggplot(data = g_hpd, aes(x = .data$g, y = reorder(.data$gen, .data$g))) +
-        geom_errorbar(aes(xmin = .data$down, xmax = .data$up), width = 0)+
-        geom_errorbar(aes(xmin = .data$DOWN, xmax = .data$UP), width = 0, linewidth = 2, alpha = .8) +
-        labs(x = 'Genotypic main effects (HPD)', y = 'Genotypes') +
-        geom_point(size = 4, color = '#33a02c')
+      output$across$g_hpd = g_hpd
 
 
       # Marginal probabilities ----------------
@@ -2958,16 +1602,10 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
       rownames(ind_post) = name.gen
       prob_g = data.frame(ID = rownames(ind_post), prob = rowMeans(ind_post), row.names = NULL)
       prob_g = prob_g[order(prob_g$prob, decreasing = T),]
-      prob_g.plot = ggplot(prob_g) +
-        geom_segment(aes(x = factor(.data$ID, levels = .data$ID), xend = .data$ID,
-                         y = 0, yend = .data$prob), linewidth = 1) +
-        geom_point(aes(x = factor(.data$ID, levels = .data$ID), y = .data$prob),
-                   size = 2, color = 'black', fill = alpha('#33a02c', 0.3),
-                   alpha = 0.7, shape = 21, stroke = .4) +
-        labs(x = 'Genotypes', y = 'Probability of superior performance') +
-        theme(axis.text.x = element_text(angle = 90)) # + ylim(0,1)
 
-      if(verbose) message('1. Probability of superior performance estimated')
+      if(verbose) message('-> Probability of superior performance estimated')
+
+      output$across$perfo = prob_g
 
       ord_gen = factor(prob_g$ID, levels = prob_g$ID)
 
@@ -2990,66 +1628,21 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
       }
 
       colnames(pwsprob_g) = rownames(pwsprob_g) = unlist(strsplit(rownames(pwsprob_g), split = '_@#'))
-      pwsprob_g1 = pwsprob_g[match(prob_g$ID, rownames(pwsprob_g)),
-                             match(prob_g$ID, rownames(pwsprob_g))]
-      pwsprob_g1[upper.tri(pwsprob_g1, diag = T)] = NA
-      pwsprob_g1 = stats::reshape(
-        data.frame(pwsprob_g1),
-        direction = 'long',
-        varying = list(colnames(data.frame(pwsprob_g1))),
-        idvar = 'y', timevar = 'x',
-        ids = rownames(pwsprob_g1), times = colnames(pwsprob_g1),
-        new.row.names = NULL, v.names = 'prob'
-      )
+      output$across$pair_perfo = pwsprob_g
 
-      if(increase){
-        pwsprob_g.plot = ggplot(pwsprob_g1,
-                                aes(x = factor(.data$x,
-                                               levels = unique(.data$x)),
-                                    y = factor(.data$y,
-                                               levels = unique(.data$y))))+
-          geom_tile(aes(fill = .data$prob), colour = 'white') +
-          labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] > g[y]))))+
-          theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-                legend.position = c(.8,.15), legend.direction = 'horizontal')+
-          scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                               option = 'turbo')+
-          guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
-                                       title.hjust = .5))
-      } else {
-        pwsprob_g.plot = ggplot(pwsprob_g1,
-                                aes(x = factor(.data$x,
-                                               levels = unique(.data$x)),
-                                    y = factor(.data$y,
-                                               levels = unique(.data$y))))+
-          geom_tile(aes(fill = .data$prob), colour = 'white') +
-          labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] < g[y]))))+
-          theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-                legend.position = c(.8,.15), legend.direction = 'horizontal')+
-          scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                               option = 'turbo')+
-          guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
-                                       title.hjust = .5))
-      }
-
-      pwsprob_g[upper.tri(pwsprob_g, diag = T)] = NA
-      pwsprob_g = stats::reshape(
-        data.frame(pwsprob_g),
-        direction = 'long',
-        varying = list(colnames(data.frame(pwsprob_g))),
-        idvar = 'y', timevar = 'x',
-        ids = rownames(pwsprob_g), times = colnames(pwsprob_g),
-        new.row.names = 1:length(c(pwsprob_g)), v.names = 'prob'
-      )
-      pwsprob_g = stats::na.exclude(pwsprob_g[order(pwsprob_g$x),])
-
-      if(verbose) message('2. Pairwise probability of superior performance estimated')
+      if(verbose) message('-> Pairwise probability of superior performance estimated')
 
       ## Probability of superior stability - Location -----------------
       staprob_gl = mod$post$gl
       colnames(staprob_gl) = sub(
         'Gen_@#','',do.call(rbind,strsplit(colnames(staprob_gl),'_@#loc'))[,1]
       )
+      if(any(table(colnames(staprob_gl)) == 1)){
+        oncegeno =  names(table(colnames(staprob_gl))[which(table(colnames(staprob_gl)) == 1)])
+        staprob_gl = staprob_gl[,-which(colnames(staprob_gl) %in% oncegeno)]
+        warning("Some genotypes were evaluated in only one location (environment), so we could not compute their stability: ",
+                paste(oncegeno, collapse = ", "))
+      }
       probsta = do.call(cbind, lapply(
         lapply(
           name.gen, function(x) staprob_gl[,grep(paste0(x,'$'), colnames(staprob_gl))]
@@ -3064,16 +1657,10 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
       rownames(ind_post) = name.gen
       prob_gl = data.frame(ID = rownames(ind_post), prob = rowMeans(ind_post), row.names = NULL)
       prob_gl = prob_gl[order(prob_gl$prob, decreasing = T),]
-      prob_gl.plot = ggplot(prob_gl)+
-        geom_segment(aes(x = factor(.data$ID, levels = .data$ID), xend = .data$ID,
-                         y = 0, yend = .data$prob), linewidth = 1) +
-        geom_point(aes(x = factor(.data$ID, levels = .data$ID), y = .data$prob),
-                   size = 2, color = 'black', fill = alpha('#33a02c', 0.3),
-                   alpha = 0.7, shape = 21, stroke = .4) +
-        labs(x = 'Genotypes', y = 'Probability of superior stability') +
-        theme(axis.text.x = element_text(angle = 90)) #+ ylim(0,1)
 
-      if(verbose) message('3. Probability of superior stability (GL) estimated')
+      output$across$stabi$gl = prob_gl
+
+      if(verbose) message('-> Probability of superior stability (GL) estimated')
 
       ## Pairwise probability of superior stability - Location -------------
       pwsprob_gl = matrix(NA, num.gen, num.gen,
@@ -3083,48 +1670,17 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
           pwsprob_gl[i,j] = mean(probsta[,j] < probsta[,i])
         }
       }
-      pwsprob_gl1 = pwsprob_gl[match(prob_gl$ID, rownames(pwsprob_gl)),
-                               match(prob_gl$ID, rownames(pwsprob_gl))]
-      pwsprob_gl1[upper.tri(pwsprob_gl1, diag = T)] = NA
-      pwsprob_gl1 = stats::reshape(
-        data.frame(pwsprob_gl1),
-        direction = 'long',
-        varying = list(colnames(data.frame(pwsprob_gl1))),
-        idvar = 'y', timevar = 'x',
-        ids = rownames(pwsprob_gl1), times = colnames(pwsprob_gl1),
-        new.row.names = NULL, v.names = 'prob'
-      )
-      pwsprob_gl.plot = ggplot(pwsprob_gl1,
-                               aes(x = factor(.data$x, levels = unique(.data$x)),
-                                   y = factor(.data$y, levels = unique(.data$y))))+
-        geom_tile(aes(fill = .data$prob), colour = 'white')+
-        labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold("Pr["~var(gl[x]) < var(gl[y])~"]")))+
-        theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-              legend.position = c(.8,.15), legend.direction = 'horizontal')+
-        scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                             option = 'turbo')+
-        guides(fill = guide_colorbar(barwidth = 9, barheight = 1.5, title.position = 'top',
-                                     title.hjust = .5))
 
-      pwsprob_gl[upper.tri(pwsprob_gl, diag = T)] = NA
-      pwsprob_gl = stats::reshape(
-        data.frame(pwsprob_gl),
-        direction = 'long',
-        varying = list(colnames(data.frame(pwsprob_gl))),
-        idvar = 'y', timevar = 'x',
-        ids = rownames(pwsprob_gl), times = colnames(pwsprob_gl),
-        new.row.names = 1:length(c(pwsprob_gl)), v.names = 'prob'
-      )
-      pwsprob_gl = stats::na.exclude(pwsprob_gl[order(pwsprob_gl$x),])
+      output$across$pair_stabi$gl = pwsprob_gl
 
-      if(verbose) message('4. Pairwise probability of superior stability (GL) estimated')
+      if(verbose) message('-> Pairwise probability of superior stability (GL) estimated')
 
       ## Joint probability of superior performance and stability -----------------
       j_prob = rbind(merge(prob_g, prob_gl, by = 'ID'))
 
       j_prob$joint = j_prob[,2] * j_prob[,3]
       colnames(j_prob) = c('ID', 'Performance', 'Stability', 'Joint')
-      j_prob$lev = rep(c('Location'), each = num.gen)
+      j_prob$lev = rep(c(loc), each = num.gen)
       j_prob = stats::reshape(j_prob, direction = 'long', varying = list(2:4),
                               times = colnames(j_prob)[2:4], v.names = 'value')
       j_prob = j_prob[,-5]
@@ -3134,78 +1690,30 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
 
       j_prob = j_prob[j_prob$category == "Joint",]
 
-      retrieve = function(x) do.call(rbind, strsplit(x, '@#_'))[,1]
+      output$across$joint = j_prob
 
-      j_prob.plot = ggplot(cbind(j_prob, V4 = paste(j_prob$ID, j_prob$level, sep = '@#_')),
-                           aes(x = stats::reorder(.data$V4, -.data$prob), y = .data$prob)) +
-        #facet_wrap(.~.data$level, ncol = 1, scales = "free_x") +
-        theme(axis.text.x = element_text(angle = 90)) +
-        scale_x_discrete(labels = retrieve) +
-        geom_segment(aes(x = reorder(.data$V4, -.data$prob), xend = .data$V4,
-                         y = 0, yend = .data$prob), linewidth = 1) +
-        geom_point(size = 2, color = 'black', fill = alpha('#33a02c', 0.3),
-                   alpha = 0.7, shape = 21, stroke = .4) +
-        labs(x = "Genotype", y = "Joint probability")
-
-      if(verbose) message('5. Joint probability of superior performance and stability estimated')
-
-      ## Transform into interactive plots -----------------
-
-      if(interactive){
-        g_hpd = plotly::ggplotly(g_hpd)
-        prob_g.plot = plotly::ggplotly(prob_g.plot)
-        prob_gl.plot = plotly::ggplotly(prob_gl.plot)
-        j_prob.plot = plotly::ggplotly(j_prob.plot)
-        pwsprob_g.plot = plotly::ggplotly(
-          ggplot(data = pwsprob_g1, aes(x = factor(.data$x, levels = unique(.data$x)),
-                                        y = factor(.data$y, levels = unique(.data$y)),
-                                        fill = .data$prob)) +
-            geom_tile() +
-            scale_fill_viridis_c(option = 'turbo', limits = c(0,1),
-                                 na.value = 'white', direction = 1) +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = 'Pr[g(x) > g(y)]') +
-            theme(axis.text.x = element_text(angle = 90),
-                  panel.background = element_blank())
-        )
-        pwsprob_gl.plot = plotly::ggplotly(
-          ggplot(data = pwsprob_gl, aes(x = factor(.data$x, levels = unique(.data$x)),
-                                        y = factor(.data$y, levels = unique(.data$y)),
-                                        fill = .data$prob)) +
-            geom_tile() +
-            scale_fill_viridis_c(option = 'turbo', limits = c(0,1),
-                                 na.value = 'white', direction = 1) +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = 'Pr[var(gl(x)) < var(gl(y))]') +
-            theme(axis.text.x = element_text(angle = 90),
-                  panel.background = element_blank())
-        )
-      }
-
-      ## Save the outputs in a list -----------------
-      marg_prob = list(
-        df = list(
-          perfo = prob_g,
-          pair_perfo = pwsprob_g,
-          stabi_gl = prob_gl,
-          pair_stabi_gl = pwsprob_gl,
-          joint_prob = j_prob
-        ),
-        plots = list(
-          g_hpd = g_hpd,
-          perfo = prob_g.plot,
-          pair_perfo = pwsprob_g.plot,
-          stabi_gl = prob_gl.plot,
-          pair_stabi_gl = pwsprob_gl.plot,
-          joint_prob = j_prob.plot
-        )
-      )
+      if(verbose) message('-> Joint probability of superior performance and stability estimated')
 
       ## Save data frames in the work directory -----------------
       if(save.df){
-        dir.create(path = paste0(getwd(),'/marg_prob'))
-        for (i in names(marg_prob$df)){
-          utils::write.csv(marg_prob$df[[i]],
-                           file = paste0(getwd(),'/marg_prob/',i,'.csv'),
+        dir.create(path = paste0(getwd(),'/across_probs'))
+        utils::write.csv(output$across$pair_perfo,
+                         file = paste0(getwd(),'/across_probs/pair_perfo.csv'),
+                         row.names = T)
+        for (i in names(output$across)[-grep("stabi|pair", names(output$across))]){
+          utils::write.csv(output$across[[i]],
+                           file = paste0(getwd(),'/across_probs/',i,'.csv'),
                            row.names = F)
+        }
+        for (i in names(output$across$stabi)){
+          utils::write.csv(output$across$stabi[[i]],
+                           file = paste0(getwd(),'/across_probs/stabi_',i,'.csv'),
+                           row.names = F)
+        }
+        for (i in names(output$across$pair_stabi)){
+          utils::write.csv(output$across$pair_stabi[[i]],
+                           file = paste0(getwd(),'/across_probs/pair_stabi_',i,'.csv'),
+                           row.names = T)
         }
       }
 
@@ -3255,30 +1763,9 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
       prob_ggl = suppressWarnings(Reduce(function(df1, df2) merge(df1, df2, by = 'gen', all = T), probs))
       colnames(prob_ggl)[-1] = name.loc
 
-      prob_ggl.plot = ggplot(
-        data =  stats::reshape(
-          data = prob_ggl, direction = 'long',
-          varying = list(colnames(prob_ggl)[-1]),
-          ids = name.gen, times = name.loc,
-          v.names = 'prob',
-          idvar = 'gen', timevar = 'loc'
-        ),
-        aes(x = .data$loc, y = factor(.data$gen, levels = ord_gen), fill = .data$prob)
-      ) +
-        geom_tile(colour = 'white') +
-        theme(axis.text.x = element_text(angle = 90),
-              panel.background = element_blank(),
-              legend.position = 'top') +
-        scale_fill_viridis_c(direction = 1, na.value = '#D3D7DC',
-                             limits = c(0,1), option = 'turbo') +
-        labs(x = "Locations", y = 'Genotypes',
-             fill = expression(bold(Pr(g %in% Omega)))) +
-        guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5,
-                                     title.position = 'top',
-                                     title.hjust = .5)) +
-        scale_y_discrete(limits = rev)
+      output$within$perfo$gl = prob_ggl
 
-      if(verbose) message('6. Probability of superior performance within locations estimated')
+      if(verbose) message('-> Probability of superior performance within locations estimated')
 
       ## Pairwise probability of superior performance per location ----------------
 
@@ -3295,19 +1782,6 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
           a
         })
 
-        pwprobs.loc.plots = lapply(pwprobs.loc, function(x){
-          ggplot(data = x, aes(x = factor(.data$x, levels = unique(.data$x)),
-                               y = factor(.data$y, levels = unique(.data$y)),
-                               fill = .data$pwprob)) +
-            geom_tile() +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] > g[y]))))+
-            scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                 option = 'turbo')+
-            guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
-                                         title.hjust = .5)) +
-            theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-                  legend.position = c(.8,.15), legend.direction = 'horizontal')
-        })
       } else {
         pwprobs.loc = lapply(cond_ggl, function(x){
           combs = data.frame(t(utils::combn(colnames(x), 2)))
@@ -3320,112 +1794,452 @@ prob_sup = function(data, trait, gen, loc, reg = NULL, year = NULL, mod.output, 
                     }))
           a
         })
-
-        pwprobs.loc.plots = lapply(pwprobs.loc, function(x){
-          ggplot(data = x, aes(x = factor(.data$x, levels = unique(.data$x)),
-                               y = factor(.data$y, levels = unique(.data$y)),
-                               fill = .data$pwprob)) +
-            geom_tile() +
-            labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] < g[y]))))+
-            scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                 option = 'turbo')+
-            guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
-                                         title.hjust = .5)) +
-            theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
-                  legend.position = c(.8,.15), legend.direction = 'horizontal')
-        })
       }
 
+      output$within$pair_perfo$gl = pwprobs.loc
 
-      if(verbose) message('7. Pairwise probability of superior performance within locations estimated')
-
-      ## Transform into interactive plots -----------------
-      if(interactive){
-        prob_ggl.plot = plotly::ggplotly(
-          ggplot(
-            data =  stats::reshape(
-              data = prob_ggl, direction = 'long',
-              varying = list(colnames(prob_ggl)[-1]),
-              ids = name.gen, times = name.loc,
-              v.names = 'prob',
-              idvar = 'gen', timevar = 'loc'
-            ),
-            aes(x = .data$loc, y = factor(.data$gen, levels = ord_gen),
-                fill = .data$prob)
-          ) +
-            geom_tile(colour = 'white') +
-            theme(axis.text.x = element_text(angle = 90),
-                  panel.background = element_blank(),
-                  legend.position = 'top') +
-            scale_fill_viridis_c(direction = 1, na.value = '#D3D7DC',
-                                 limits = c(0,1), option = 'turbo') +
-            labs(x = "Locations", y = 'Genotypes',
-                 fill = expression(bold(Pr(g %in% Omega))))
-        )
-
-
-        if(increase){
-          pwprobs.loc_plots = lapply(pwprobs.loc, function(x){
-            plotly::ggplotly(
-              ggplot(data = x, aes(x = .data$x, y = .data$y, fill = .data$pwprob)) +
-                geom_tile() +
-                labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] > g[y]))))+
-                scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                     option = 'turbo') +
-                theme(axis.text.x = element_text(angle = 90),
-                      panel.background = element_blank())
-            )
-          })
-        } else {
-          pwprobs.loc_plots = lapply(pwprobs.loc, function(x){
-            plotly::ggplotly(
-              ggplot(data = x, aes(x = .data$x, y = .data$y, fill = .data$pwprob)) +
-                geom_tile() +
-                labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] < g[y]))))+
-                scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
-                                     option = 'turbo') +
-                theme(axis.text.x = element_text(angle = 90),
-                      panel.background = element_blank())
-            )
-          })
-        }
-
-      }
-
-      ## Save the outputs in a list -----------------
-      cond_prob = list(
-        df = list(
-          prob_loc = prob_ggl,
-          pwprob_loc = pwprobs.loc
-        ),
-        plots = list(
-          prob_loc = prob_ggl.plot,
-          pwprob_loc = pwprobs.loc.plots
-        )
-      )
+      if(verbose) message('-> Pairwise probability of superior performance within locations estimated')
 
       ## Save data frames in the work directory -----------------
 
       if(save.df){
-        dir.create(path = paste0(getwd(),'/cond_prob'))
+        dir.create(path = paste0(getwd(),'/within'))
         utils::write.csv(prob_ggl,
-                         file = paste0(getwd(),'/cond_prob/prob_loc.csv'),
+                         file = paste0(getwd(),'/within_probs/prob_ggl.csv'),
                          row.names = F)
-
-        dir.create(path = paste0(getwd(),'/cond_prob/pairwise_loc'))
+        dir.create(path = paste0(getwd(),'/within_probs/pairwise_ggl'))
         for (i in names(pwprobs.loc)){
           utils::write.csv(pwprobs.loc[[i]],
-                           file = paste0(getwd(),'/cond_prob/pairwise_loc/',i,'.csv'),
+                           file = paste0(getwd(),'/within_probs/pairwise_ggl/',i,'.csv'),
                            row.names = F)
         }
-
       }
 
       # Final output -----------
       if(verbose) message('Process completed!')
-      output = list(marginal = marg_prob, conditional = cond_prob)
       return(output)
 
     }
   }
 }
+
+
+#' Plots for the `probsup` object
+#'
+#' Build plots using the outputs stored in the `probsup` object.
+#'
+#'
+#' @param x An object of class `probsup`.
+#' @param category A string indicating which plot to build. See options in the Details section.
+#' @param level A string indicating the information level to be used for building
+#' the plots. Options are `"across"` for focusing on the probabilities across environments,
+#' or `"within"` to focus on the within-environment effects. Defaults to `"across"`.
+#' @param ... currently not used
+#' @method plot probsup
+#'
+#' @details The available options are:
+##'   \itemize{
+##'     \item \code{hpd} : a caterpillar plot representing the marginal genotypic value of
+##'       each genotype, and their respective highest posterior density interval (95% represented by the
+##'       thick line, and 97.5% represented by the thin line). Available only if `level = "across"`.
+##'     \item \code{perfo} : if `level = "across"`, a lollipop plot illustrating the probabilities of superior performance.
+##'       If `level = "within"`, a heatmap with the probabilities of superior performance within
+##'       environments. If a model with `reg` and/or `year` is fitted, multiple plots are produced.
+##'     \item \code{stabi}: a lollipop plot with the probabilities of superior stability.
+##'       If a model with `reg` and/or `year` is fitted, multiple plots are produced.
+##'       Available only if `level = "across"`.
+##'     \item \code{pair_perfo} : if `level = "across"`, a heatmap representing the pairwise probability of superior
+##'       performance (the probability of genotypes at the \emph{x}-axis being superior
+##'       to those on the \emph{y}-axis). If `level = "within"`, a list of heatmaps representing the pairwise probability of superior
+##'       performance within environments.  If a model with `reg` and/or `year` is fitted, multiple plots (and multiple lists) are produced.
+##'       Should this option is set, it is mandatory to store the outputs in an object
+##'       (e.g., `pl <- plot(obj, category = "pair_perfo", level = "within")`) so they can be visualized one at a time.
+##'     \item \code{pair_stabi}: a heatmap with the pairwise probabilities of superior stability
+##'       (the probability of genotypes at the \emph{x}-axis being more stable than those on the \emph{y}-axis).
+##'       If a model with `reg` and/or `year` is fitted, multiple plots are produced. Available only if `level = "across"`.
+##'     \item \code{joint}: a lollipop plot with the joint probabilities of superior performance and stability.
+##'   }
+#'
+#'
+#' @seealso  [ProbBreed::prob_sup]
+#'
+##' @import ggplot2
+##' @importFrom stats reshape na.exclude
+##' @importFrom rlang .data
+##'
+#' @rdname plot.probsup
+#' @export
+#'
+#' @examples
+#' \donttest{
+##' mod = bayes_met(data = soy,
+##'                 gen = "Gen",
+##'                 loc = "Loc",
+##'                 repl = NULL,
+##'                 year = NULL,
+##'                 reg = NULL,
+##'                 res.het = FALSE,
+##'                 trait = 'Y',
+##'                 iter = 6000, cores = 4, chains = 4)
+##'
+##' outs = extr_outs(model = mod,
+##'                  probs = c(0.05, 0.95),
+##'                  verbose = TRUE)
+##'
+##' results = prob_sup(extr = outs,
+##'                    int = .2,
+##'                    increase = TRUE,
+##'                    save.df = FALSE,
+##'                    verbose = FALSE)
+##'
+##' plot(results, category = "hpd")
+##' plot(results, category = "perfo", level = "across")
+##' plot(results, category = "perfo", level = "within")
+##' plot(results, category = "stabi")
+##' plot(results, category = "pair_perfo", level = "across")
+##' plwithin = plot(results, category = "pair_perfo", level = "within")
+##' plot(results, category = "pair_stabi")
+##' plot(results, category = "joint")
+#' }
+#'
+
+plot.probsup = function(x, ..., category = "perfo", level = "across"){
+
+  obj = x
+  # Namespaces
+  requireNamespace('ggplot2')
+
+  stopifnot("Object is not of class 'probsup'" = class(obj) == "probsup")
+
+  control = attr(obj, "control")
+  ord_gen = factor(obj$across$perfo$ID, levels = obj$across$perfo$ID)
+  retrieve = function(x) do.call(rbind, strsplit(x, '@#_'))[,1]
+
+  # HPD --------------
+  if(category == "hpd"){
+    stopifnot("This plot is available only for level = 'across'" = level == "across")
+
+    g_hpd = obj$across$g_hpd
+
+    ggplot(data = g_hpd, aes(x = .data$g, y = reorder(.data$gen, .data$g))) +
+      geom_errorbar(aes(xmin = .data$HPD7.5, xmax = .data$HPD97.5), width = 0)+
+      geom_errorbar(aes(xmin = .data$HPD5, xmax = .data$HPD95), width = 0, linewidth = 2, alpha = .6) +
+      labs(x = 'Genotypic main effects (HPD)', y = 'Genotypes') +
+      geom_point(size = 2, color = '#33a02c') + theme_bw()
+  }
+
+  # Perfo ---------------
+  else if(category == "perfo"){
+
+    if(level == "across"){
+      prob_g = obj$across$perfo
+
+      ggplot(prob_g) +
+        geom_segment(aes(x = factor(.data$ID, levels = .data$ID), xend = .data$ID,
+                         y = 0, yend = .data$prob), linewidth = 1) +
+        geom_point(aes(x = factor(.data$ID, levels = .data$ID), y = .data$prob),
+                   size = 2, color = 'black', fill = alpha('#33a02c', 0.3),
+                   alpha = 0.7, shape = 21, stroke = .4) +
+        labs(x = 'Genotypes', y = 'Probability of superior performance')+
+        theme_bw() +
+        theme(axis.text.x = element_text(angle = 90))
+
+
+    }else if(level == "within"){
+      wperfo = lapply(obj$within$perfo, function(x){
+        stats::reshape(
+          data = x, direction = 'long',
+          varying = list(colnames(x)[-1]),
+          ids = x[1,], times = colnames(x)[-1],
+          v.names = 'prob',
+          idvar = 'gen', timevar = 'env'
+        )
+      })
+
+      wperfo$gl$fac = control$loc
+      if(control$reg != 0) wperfo$gm$fac = control$reg
+      if(control$year != 0) wperfo$gt$fac = control$year
+
+      wperfo = do.call(rbind, wperfo)
+
+      ggplot(data = wperfo, aes(x = .data$env, y = factor(.data$gen, levels = ord_gen),
+                                fill = .data$prob)) +
+        facet_wrap(.~fac, scales = "free_x") +
+        theme_bw() +
+        theme(axis.text.x = element_text(angle = 90, size = 8,  hjust=1,vjust=0.5),
+              legend.position = "top",
+              axis.title.x = element_blank()) +
+        geom_tile()  +
+        scale_fill_viridis_c(direction = 1, na.value = '#D3D7DC',
+                             limits = c(0,1), option = 'turbo') +
+        labs(y = 'Genotypes',
+             fill = expression(bold(Pr(g %in% Omega)))) +
+        guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5,
+                                     title.position = 'top',
+                                     title.hjust = .5)) +
+        scale_y_discrete(limits = rev)
+    }
+
+  }
+
+  # Stabi ---------------
+  else if(category == "stabi"){
+    stopifnot("This plot is available only for level = 'across'" = level == "across")
+
+    stabi.df = obj$across$stabi
+    stabi.df$gl$fac = control$loc
+    if(control$reg != 0) stabi.df$gm$fac = control$reg
+    if(control$year != 0) stabi.df$gt$fac = control$year
+
+    stabi.df = do.call(rbind, stabi.df)
+
+    ggplot(data = cbind(stabi.df, V4 = paste(stabi.df$ID, stabi.df$fac, sep = '@#_')),
+           aes(x = stats::reorder(.data$V4, -.data$prob), y = .data$prob)) +
+      facet_wrap(.~.data$fac, ncol = 1, scales = "free") +
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 90)) +
+      scale_x_discrete(labels = retrieve) +
+      geom_segment(aes(x = reorder(.data$V4, -.data$prob), xend = .data$V4,
+                       y = 0, yend = .data$prob), linewidth = 1) +
+      geom_point(size = 2, color = 'black', fill = alpha('#33a02c', 0.3),
+                 alpha = 0.7, shape = 21, stroke = .4) +
+      labs(x = "Genotype", y = "Probability of superior stability")
+  }
+
+  # Pair perfo -----------
+  else if(category == "pair_perfo"){
+
+    if(level == "across"){
+      pwperfo = obj$across$pair_perfo
+
+      pwperfo = pwperfo[match(ord_gen, rownames(pwperfo)),
+                        match(ord_gen, rownames(pwperfo))]
+      pwperfo[upper.tri(pwperfo, diag = T)] = NA
+      pwperfo = stats::reshape(
+        data.frame(pwperfo),
+        direction = 'long',
+        varying = list(colnames(data.frame(pwperfo))),
+        idvar = 'y', timevar = 'x',
+        ids = rownames(pwperfo), times = colnames(pwperfo),
+        new.row.names = NULL, v.names = 'prob'
+      )
+
+      if(control$increase){
+        ggplot(pwperfo, aes(x = factor(.data$x,
+                                       levels = unique(.data$x)),
+                            y = factor(.data$y,
+                                       levels = unique(.data$y)))) +
+          geom_tile(aes(fill = .data$prob)) +
+          labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] > g[y]))))+
+          theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
+                legend.position = 'inside',
+                legend.position.inside = c(.8,.15), legend.direction = 'horizontal')+
+          scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
+                               option = 'turbo')+
+          guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
+                                       title.hjust = .5))
+      } else {
+        ggplot(pwperfo, aes(x = factor(.data$x,
+                                       levels = unique(.data$x)),
+                            y = factor(.data$y,
+                                       levels = unique(.data$y)))) +
+          geom_tile(aes(fill = .data$prob)) +
+          labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] < g[y]))))+
+          theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
+                legend.position = 'inside',
+                legend.position.inside = c(.8,.15), legend.direction = 'horizontal')+
+          scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
+                               option = 'turbo')+
+          guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
+                                       title.hjust = .5))
+      }
+
+    }else if(level == "within"){
+
+      pwprobs.plots = list()
+      pwprobs.plots$gl = lapply(obj$within$pair_perfo$gl, function(x){
+
+        if(control$increase){
+          ggplot(data = x, aes(x = factor(.data$x, levels = unique(.data$x)),
+                               y = factor(.data$y, levels = unique(.data$y)),
+                               fill = .data$pwprob)) +
+            geom_tile() +
+            labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] > g[y]))))+
+            theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
+                  legend.position = 'inside',
+                  legend.position.inside = c(.8,.15), legend.direction = 'horizontal')+
+            scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
+                                 option = 'turbo')+
+            guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
+                                         title.hjust = .5))
+        } else {
+          ggplot(data = x, aes(x = factor(.data$x, levels = unique(.data$x)),
+                               y = factor(.data$y, levels = unique(.data$y)),
+                               fill = .data$pwprob)) +
+            geom_tile() +
+            labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] < g[y]))))+
+            theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
+                  legend.position = 'inside',
+                  legend.position.inside = c(.8,.15), legend.direction = 'horizontal')+
+            scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
+                                 option = 'turbo')+
+            guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
+                                         title.hjust = .5))
+        }
+
+      })
+
+      if(control$reg != 0) pwprobs.plots$gm = lapply(obj$within$pair_perfo$gm, function(x){
+        if(control$increase){
+          ggplot(data = x, aes(x = factor(.data$x, levels = unique(.data$x)),
+                               y = factor(.data$y, levels = unique(.data$y)),
+                               fill = .data$pwprob)) +
+            geom_tile() +
+            labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] > g[y]))))+
+            theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
+                  legend.position = 'inside',
+                  legend.position.inside = c(.8,.15), legend.direction = 'horizontal')+
+            scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
+                                 option = 'turbo')+
+            guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
+                                         title.hjust = .5))
+        }else{
+          ggplot(data = x, aes(x = factor(.data$x, levels = unique(.data$x)),
+                               y = factor(.data$y, levels = unique(.data$y)),
+                               fill = .data$pwprob)) +
+            geom_tile() +
+            labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] < g[y]))))+
+            theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
+                  legend.position = 'inside',
+                  legend.position.inside = c(.8,.15), legend.direction = 'horizontal')+
+            scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
+                                 option = 'turbo')+
+            guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
+                                         title.hjust = .5))
+        }
+      })
+
+      if(control$year != 0) pwprobs.plots$gt = lapply(obj$within$pair_perfo$gt, function(x){
+        if(control$increase){
+          ggplot(data = x, aes(x = factor(.data$x, levels = unique(.data$x)),
+                               y = factor(.data$y, levels = unique(.data$y)),
+                               fill = .data$pwprob)) +
+            geom_tile() +
+            labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] > g[y]))))+
+            theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
+                  legend.position = 'inside',
+                  legend.position.inside = c(.8,.15), legend.direction = 'horizontal')+
+            scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
+                                 option = 'turbo')+
+            guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
+                                         title.hjust = .5))
+        }else{
+          ggplot(data = x, aes(x = factor(.data$x, levels = unique(.data$x)),
+                               y = factor(.data$y, levels = unique(.data$y)),
+                               fill = .data$pwprob)) +
+            geom_tile() +
+            labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold(Pr(g[x] < g[y]))))+
+            theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
+                  legend.position = 'inside',
+                  legend.position.inside = c(.8,.15), legend.direction = 'horizontal')+
+            scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
+                                 option = 'turbo')+
+            guides(fill = guide_colorbar(barwidth = 7, barheight = 1.5, title.position = 'top',
+                                         title.hjust = .5))
+          }
+
+      })
+
+      resp <- readline("Are you using an object to store the outputs of this function? Enter Y/n: ")
+      if(substr(resp, 1, 1)  ==  "y" | substr(resp, 1, 1)  ==  "yes" | substr(resp, 1, 1)  ==  "Y" | resp  == "")
+      {
+        return(pwprobs.plots)
+      } else{
+        stop("There is more than one plot, so it is not a good idea to plot them all at once. Please, store the output of this function in an object")
+      }
+    }
+
+  }
+
+  # Pair stabi -------------
+  else if(category == "pair_stabi"){
+    stopifnot("This plot is available only for level = 'across'" = level == "across")
+
+    pairstabi.df = obj$across$pair_stabi
+    pairstabi.df = lapply(pairstabi.df, function(x){
+      x = x[match(ord_gen, rownames(x)),
+            match(ord_gen, rownames(x))]
+      x[upper.tri(x, diag = T)] = NA
+      x = stats::reshape(
+        data.frame(x),
+        direction = 'long',
+        varying = list(colnames(data.frame(x))),
+        idvar = 'y', timevar = 'x',
+        ids = rownames(x), times = colnames(x),
+        new.row.names = NULL, v.names = 'prob'
+      )
+    })
+
+    pairstabi.df$gl$fac = control$loc
+    if(control$reg != 0) pairstabi.df$gm$fac = control$reg
+    if(control$year != 0) pairstabi.df$gt$fac = control$year
+    pairstabi.df = do.call(rbind, pairstabi.df)
+
+    ggplot(pairstabi.df,
+           aes(x = factor(.data$x, levels = unique(.data$x)),
+               y = factor(.data$y, levels = unique(.data$y))))+
+      geom_tile(aes(fill = .data$prob))+
+      facet_wrap(.~fac) +
+      labs(x = 'Genotypes', y = 'Genotypes', fill = expression(bold("Pr["~var(gei[x]) < var(gei[y])~"]")))+
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 90),panel.background = element_blank(),
+            legend.position = 'top', legend.direction = 'horizontal')+
+      scale_fill_viridis_c(direction = 1, na.value = 'white',limits = c(0,1),
+                           option = 'turbo')+
+      guides(fill = guide_colorbar(barwidth = 9, barheight = 1.5, title.position = 'top',
+                                   title.hjust = .5))
+  }
+
+  # Joint prob -------------
+  else if(category == "joint"){
+    stopifnot("This plot is available only for level = 'across'" = level == "across")
+
+    jprob = obj$across$joint
+
+    ggplot(cbind(jprob, V4 = paste(jprob$ID, jprob$level, sep = '@#_')),
+           aes(x = stats::reorder(.data$V4, -.data$prob), y = .data$prob)) +
+      facet_wrap(.~.data$level, ncol = 1, scales = "free") +
+      theme_bw()+
+      theme(axis.text.x = element_text(angle = 90)) +
+      scale_x_discrete(labels = retrieve) +
+      geom_segment(aes(x = reorder(.data$V4, -.data$prob), xend = .data$V4,
+                       y = 0, yend = .data$prob), linewidth = 1) +
+      geom_point(size = 2, color = 'black', fill = alpha('#33a02c', 0.3),
+                 alpha = 0.7, shape = 21, stroke = .4) +
+      labs(x = "Genotype", y = "Joint probability")
+
+  }
+}
+
+
+#' Print an object of class `probsup`
+#'
+#' Print a `probsup` object in R console
+#'
+#' @param x An object of class `probsup`
+#' @param ... currently not used
+#' @method print probsup
+#'
+#' @seealso [ProbBreed::prob_sup]
+#'
+#' @export
+#'
+
+print.probsup = function(x, ...){
+  obj = x
+  message("==> Considering an intensity of ", attr(obj, "control")$intensity *100,'%, here are the selected candidates:')
+  temp =obj$across$perfo[1:ceiling(nrow(obj$across$perfo) * attr(obj, "control")$intensity),]
+  rownames(temp) = NULL
+  print(temp)
+}
+

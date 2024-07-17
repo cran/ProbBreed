@@ -4,127 +4,53 @@
 \alias{prob_sup}
 \title{Probabilities of superior performance and stability}
 \usage{
-prob_sup(
-  data,
-  trait,
-  gen,
-  loc,
-  reg = NULL,
-  year = NULL,
-  mod.output,
-  int,
-  increase = TRUE,
-  save.df = FALSE,
-  interactive = FALSE,
-  verbose = FALSE
-)
+prob_sup(extr, int, increase = TRUE, save.df = FALSE, verbose = FALSE)
 }
 \arguments{
-\item{data}{A data frame containing the phenotypic data}
+\item{extr}{An object of class \code{extr}, obtained from the \link{extr_outs} function}
 
-\item{trait, gen, loc}{A string. The name of the columns that correspond to
-the trait, genotype and location information, respectively. If
-the environment is a combination of other factors (for instance, location-year),
-the name of the column that contains this information must be attributed to \code{loc}.}
-
-\item{reg}{A string or NULL. If the dataset has information about regions,
-\code{reg} will be a string with the name of the column that corresponds to the
-region information. Otherwise, \code{reg = NULL} (default).}
-
-\item{year}{A string or NULL. If the data set has information about time-related
-environmental factors (years, seasons...), \code{year} will be a string with the
-name of the column that corresponds to the time information. Otherwise, \code{year = NULL} (default).}
-
-\item{mod.output}{An object from the \code{\link[=extr_outs]{extr_outs()}} function}
-
-\item{int}{A number representing the selection intensity
+\item{int}{A numeric representing the selection intensity
 (between 0 and 1)}
 
-\item{increase}{Logical. Indicates the direction of the selection.
-\code{TRUE} (default) for increasing the trait value, \code{FALSE} otherwise.}
+\item{increase}{Logical.\code{TRUE} (default) if the selection is for increasing the trait value, \code{FALSE} otherwise.}
 
 \item{save.df}{Logical. Should the data frames be saved in the work directory?
 \code{TRUE} for saving, \code{FALSE} (default) otherwise.}
-
-\item{interactive}{Logical. Should ggplots be converted into interactive plots?
-If \code{TRUE}, the function loads the \code{plotly} package and uses the \code{\link[plotly:ggplotly]{plotly::ggplotly()}}
-command.}
 
 \item{verbose}{A logical value. If \code{TRUE}, the function will indicate the
 completed steps. Defaults to \code{FALSE}.}
 }
 \value{
-The function returns two lists, one with the \code{marginal} probabilities, and
-another with the \code{conditional} probabilities.
+The function returns an object of class \code{probsup}, which contains two lists,
+one with the \code{across}-environments probabilities, and another with the \code{within}-environments probabilities.
 
-The \code{marginal} list has:
+The \code{across} list has the following elements:
 \itemize{
-\item \code{df} : A list of data frames containing the calculated probabilities:
-\itemize{
+\item \code{g_hpd}: Highest posterior density (HPD) of the posterior genotypic main effects.
 \item \code{perfo}: the probabilities of superior performance.
 \item \code{pair_perfo}: the pairwise probabilities of superior performance.
-\item \code{stabi}: the probabilities of superior stability. Can be \code{stabi_gl},
-\code{stabi_gm} (when \code{reg} is not \code{NULL}) or \code{stabi_gt} (when \code{year} is not \code{NULL}).
-\item \code{pair_stabi}: the pairwise probabilities of superior stability.
-Can be \code{pair_stabi_gl}, \code{pair_stabi_gm} (when \code{reg} is not \code{NULL}) or
-\code{pair_stabi_gt} (when \code{year} is not \code{NULL}).
+\item \code{stabi}: a list with the probabilities of superior stability. It contains the data frames \code{gl},
+\code{gm} (when \code{reg} is not \code{NULL}) and \code{gt} (when \code{year} is not \code{NULL}).
+\item \code{pair_stabi}: a list with the pairwise probabilities of superior stability. It contains the data frames \code{gl},
+\code{gm} (when \code{reg} is not \code{NULL}) and \code{gt} (when \code{year} is not \code{NULL}).
 \item \code{joint_prob}: the joint probabilities of superior performance and stability.
 }
-\item \code{plot} : A list of ggplots illustrating the outputs:
-\itemize{
-\item \code{g_hpd}: a caterpillar plot representing the marginal genotypic value of
-each genotype, and their respective highest posterior density interval (95\% represented by the
-thick line, and 97.5\% represented by the thin line).
-\item \code{perfo}: a bar plot illustrating the probabilities of superior performance
-\item \code{pair_perfo}: a heatmap representing the pairwise probability of superior
-performance (the probability of genotypes at the \emph{x}-axis being superior
-to those on the \emph{y}-axis).
-\item \code{stabi}: a bar plot with the probabilities of superior stability.
-Different plots are generated for \code{stabi_gl}, \code{stabi_gm} and \code{stabi_gt} if \code{reg}
-or/and \code{year} are not \code{NULL}.
-\item \code{pair_stabi}: a heatmap with the pairwise probabilities of superior stability.
-Different plots are generated for \code{stabi_gl}, \code{stabi_gm} and \code{stabi_gt} if \code{reg}
-or/and \code{year} are not \code{NULL}. This plot represents
-the probability of genotypes at the \emph{x}-axis being superior
-to those on \emph{y}-axis.
-\item \code{joint_prob}: a plot with the probabilities of superior performance,
-probabilities of superior stability and the joint probabilities of superior
-performance and stability.
-}
-}
 
-The \code{conditional} list has:
+The \code{within} list has the following elements:
 \itemize{
-\item \code{df} : A list with:
-\itemize{
-\item \code{prob}: data frames containing the probabilities of superior performance
-within environments. Can be \code{prob_loc}, \code{prob_reg} (if \code{reg} is not \code{NULL}), and
-\code{prob_year} (if \code{year} is not \code{NULL}).
-\item \code{pwprob}: lists with the pairwise probabilities of superior performance
-within environments. Can be \code{pwprob_loc}, \code{pwprob_reg} (if \code{reg} is not \code{NULL}), and
-\code{pwprob_year} (if \code{year} is not \code{NULL}).
-}
-\item \code{plot} : A list with:
-\itemize{
-\item \code{prob}: heatmaps with the probabilities of superior performance within
-environments. Can be \code{prob_loc}, \code{prob_reg} (if \code{reg} is not \code{NULL}), and
-\code{prob_year} (if \code{year} is not \code{NULL}).
-\item \code{pwprob}: a list of heatmaps representing the pairwise probability of superior
-performance within environments. Can be \code{pwprob_loc}, \code{pwprob_reg} (if \code{reg} is not \code{NULL}), and
-\code{pwprob_year} (if \code{year} is not \code{NULL}). The interpretation is the same as in the
-\code{pair_perfo} in the \code{marginal} list: the probability of genotypes at the \emph{x}-axis being superior
-to those on \emph{y}-axis.
-}
+\item \code{perfo}: a list of data frames containing the probabilities of superior performance
+within locations (\code{gl}), regions (\code{gm}) and years (\code{gt}).
+\item \code{pair_perfo}: lists with the pairwise probabilities of superior performance
+within locations (\code{gl}), regions (\code{gm}) and years (\code{gt}).
 }
 }
 \description{
 This function estimates the probabilities of superior performance and stability
-across environments (\code{marginal} output). It also computes the probabilities
-of superior performance within environments (\code{conditional} output).
+across environments, and probabilities of superior performance within environments.
 }
 \details{
 Probabilities provide the risk of recommending a selection candidate for a target
-population of environments or for a specific environment. The function \code{prob_sup()}
+population of environments or for a specific environment. \code{prob_sup}
 computes the probabilities of superior performance and the probabilities of superior stability:
 
 \itemize{\item Probability of superior performance}
@@ -132,32 +58,31 @@ computes the probabilities of superior performance and the probabilities of supe
 Let \eqn{\Omega} represent the subset of selected genotypes based on their
 performance across environments. A given genotype \eqn{j} will belong to \eqn{\Omega}
 if its genotypic marginal value (\eqn{\hat{g}_j}) is high or low enough compared to
-its peers. \code{prob_sup()} leverages the Monte Carlo discretized sampling
+its peers. \code{prob_sup} leverages the Monte Carlo discretized sampling
 from the posterior distribution to emulate the occurrence of \eqn{S} trials. Then,
 the probability of the \eqn{j^{th}} genotype belonging to \eqn{\Omega} is the
 ratio of success (\eqn{\hat{g}_j \in \Omega}) events and the total number of sampled events,
 as follows:
 
-\deqn{Pr(\hat{g}_j \in \Omega \vert y) = \frac{1}{S}\sum_{s=1}^S{I(\hat{g}_j^{(s)} \in \Omega \vert y)}}
+\deqn{Pr\left(\hat{g}_j \in \Omega \vert y \right) = \frac{1}{S}\sum_{s=1}^S{I\left(\hat{g}_j^{(s)} \in \Omega \vert y\right)}}
 
-where \eqn{S} is the total number of samples (\eqn{s = 1, 2, ..., S}),
-and \eqn{I(g_j^{(s)} \in \Omega \vert y)} is an indicator variable that can assume
+where \eqn{S} is the total number of samples \eqn{\left(s = 1, 2, ..., S \right)},
+and \eqn{I\left(g_j^{(s)} \in \Omega \vert y\right)} is an indicator variable that can assume
 two values: (1) if \eqn{\hat{g}_j^{(s)} \in \Omega} in the \eqn{s^{th}} sample,
 and (0) otherwise. \eqn{S} is conditioned to the number of iterations and chains
-previously set at \code{\link[=bayes_met]{bayes_met()}}.
+previously set at \link{bayes_met}.
 
-Similarly, the conditional probability of superior performance can be applied to
+Similarly, the within-environment probability of superior performance can be applied to
 individual environments. Let \eqn{\Omega_k} represent the subset of superior
 genotypes in the \eqn{k^{th}} environment, so that the probability of the
 \eqn{j^{th} \in \Omega_k} can calculated as follows:
 
-\deqn{Pr(\hat{g}_{jk} \in \Omega_k \vert y) = \frac{1}{S} \sum_{s=1}^S I(\hat{g}_{jk}^{(s)} \in \Omega_k \vert y)}
+\deqn{Pr\left(\hat{g}_{jk} \in \Omega_k \vert y\right) = \frac{1}{S} \sum_{s=1}^S I\left(\hat{g}_{jk}^{(s)} \in \Omega_k \vert y\right)}
 
-where \eqn{I(\hat{g}_{jk}^{(s)} \in \Omega_k \vert y)} is an indicator variable
+where \eqn{I\left(\hat{g}_{jk}^{(s)} \in \Omega_k \vert y\right)} is an indicator variable
 mapping success (1) if \eqn{\hat{g}_{jk}^{(s)}} exists in \eqn{\Omega_k}, and
 failure (0) otherwise, and \eqn{\hat{g}_{jk}^{(s)} = \hat{g}_j^{(s)} + \widehat{ge}_{jk}^{(s)}}.
-Note that when computing conditional probabilities (i.e., conditional to the
-\eqn{k^{th}} environment or mega-environment), we are accounting for
+Note that when computing within-environment probabilities, we are accounting for
 the interaction of the \eqn{j^{th}} genotype with the \eqn{k^{th}}
 environment.
 
@@ -166,32 +91,30 @@ or within environments. This metric assesses the probability of the \eqn{j^{th}}
 genotype being superior to another experimental genotype or a commercial check.
 The calculations are as follows, across and within environments, respectively:
 
-\deqn{Pr(\hat{g}_{j} > \hat{g}_{j^\prime} \vert y) = \frac{1}{S} \sum_{s=1}^S I(\hat{g}_{j}^{(s)} > \hat{g}_{j^\prime}^{(s)} \vert y)}
+\deqn{Pr\left(\hat{g}_{j} > \hat{g}_{j^\prime} \vert y\right) = \frac{1}{S} \sum_{s=1}^S I\left(\hat{g}_{j}^{(s)} > \hat{g}_{j^\prime}^{(s)} \vert y\right)}
 
 or
 
-\deqn{Pr(\hat{g}_{jk} > \hat{g}_{j^\prime k} \vert y) = \frac{1}{S} \sum_{s=1}^S I(\hat{g}_{jk}^{(s)} > \hat{g}_{j^\prime k}^{(s)} \vert y)}
+\deqn{Pr\left(\hat{g}_{jk} > \hat{g}_{j^\prime k} \vert y\right) = \frac{1}{S} \sum_{s=1}^S I\left(\hat{g}_{jk}^{(s)} > \hat{g}_{j^\prime k}^{(s)} \vert y\right)}
 
 These equations are set for when the selection direction is positive. If
 \code{increase = FALSE}, \eqn{>} is simply switched by \eqn{<}.
 
 \itemize{\item Probability of superior stability}
 
-Probabilities of superior performance highlight experimental genotypes with
-high agronomic stability. For ecological stability (invariance), the probability
-of superior stability is the more adequate. Making a direct analogy with the
-method of Shukla (1972), a stable genotype is the one that has a low variance
-of the GEI (genotype-by-environment interaction) effects \eqn{[var(\widehat{ge})]}.
+This probability makes a direct analogy with the
+method of Shukla (1972): a stable genotype is the one that has a low
+genotype-by-environment interaction variance \eqn{[var(\widehat{ge})]}.
 Using the same probability principles previously described, the probability
 of superior stability is given as follows:
 
-\deqn{Pr[var(\widehat{ge}_{jk}) \in \Omega \vert y] = \frac{1}{S} \sum_{s=1}^S I[var(\widehat{ge}_{jk}^{(s)}) \in \Omega \vert y]}
+\deqn{Pr \left[var \left(\widehat{ge}_{jk}\right) \in \Omega \vert y \right] = \frac{1}{S} \sum_{s=1}^S I\left[var \left(\widehat{ge}_{jk}^{(s)} \right) \in \Omega \vert y \right]}
 
-where \eqn{I[var(\widehat{ge}_{jk}^{(s)}) \in \Omega \vert y]} indicates if
-\eqn{var(\widehat{ge}_{jk}^{(s)})} exists in \eqn{\Omega} (1) or not (0).
+where \eqn{I\left[var \left(\widehat{ge}_{jk}^{(s)} \right) \in \Omega \vert y \right]} indicates if
+\eqn{var\left(\widehat{ge}_{jk}^{(s)}\right)} exists in \eqn{\Omega} (1) or not (0).
 Pairwise probabilities of superior stability are also possible in this context:
 
-\deqn{Pr[var(\widehat{ge}_{jk}) < var(\widehat{ge}_{j^\prime k}) \vert y] = \frac{1}{S} \sum_{s=1}^S I[var(\widehat{ge}_{jk})^{(s)} < var(\widehat{ge}_{j^\prime k})^{(s)} \vert y]}
+\deqn{Pr \left[var \left(\widehat{ge}_{jk} \right) < var\left(\widehat{ge}_{j^\prime k} \right) \vert y \right] = \frac{1}{S} \sum_{s=1}^S I \left[var \left(\widehat{ge}_{jk} \right)^{(s)} < var \left(\widehat{ge}_{j^\prime k} \right)^{(s)} \vert y \right]}
 
 Note that \eqn{j} will be superior to \eqn{j^\prime} if it has a \strong{lower}
 variance of the genotype-by-environment interaction effect. This is true regardless
@@ -201,7 +124,7 @@ The joint probability independent events is the product of the individual probab
 The estimated genotypic main effects and the variances of GEI effects are independent
 by design, thus the joint probability of superior performance and stability as follows:
 
-\deqn{Pr[\hat{g}_j \in \Omega \cap var(\widehat{ge}_{jk}) \in \Omega] = Pr(\hat{g}_j \in \Omega) \times Pr[var(\widehat{ge}_{jk}) \in \Omega]}
+\deqn{Pr \left[\hat{g}_j \in \Omega \cap var \left(\widehat{ge}_{jk} \right) \in \Omega \right] = Pr \left(\hat{g}_j \in \Omega \right) \times Pr \left[var \left(\widehat{ge}_{jk} \right) \in \Omega \right]}
 
 The estimation of these probabilities are strictly related to some key questions that
 constantly arises in plant breeding:
@@ -223,32 +146,24 @@ the \code{ProbBreed} package can be found at \url{https://saulo-chaves.github.io
 }
 \examples{
 \donttest{
-mod = bayes_met(data = maize,
-                gen = "Hybrid",
-                loc = "Location",
-                repl = c("Rep", "Block"),
+mod = bayes_met(data = soy,
+                gen = "Gen",
+                loc = "Loc",
+                repl = NULL,
                 year = NULL,
-                reg = 'Region',
-                res.het = FALSE,
-                trait = 'GY',
+                reg = NULL,
+                res.het = TRUE,
+                trait = 'Y',
                 iter = 6000, cores = 4, chains = 4)
 
-outs = extr_outs(data = maize, trait = "GY", model = mod,
+outs = extr_outs(model = mod,
                  probs = c(0.05, 0.95),
-                 check.stan.diag = TRUE,
                  verbose = TRUE)
 
-results = prob_sup(data = maize,
-                   trait = "GY",
-                   gen = "Hybrid",
-                   loc = "Location",
-                   reg = 'Region',
-                   year = NULL,
-                   mod.output = outs,
+results = prob_sup(extr = outs,
                    int = .2,
                    increase = TRUE,
                    save.df = FALSE,
-                   interactive = FALSE,
                    verbose = FALSE)
 }
 
@@ -261,4 +176,7 @@ Applied Genetics}, 133(2):443-455. \doi{10.1007/s00122-022-04041-y}
 
 Shukla, G. K. (1972) Some statistical aspects of partioning genotype environmental
 componentes of variability. \emph{Heredity}, 29:237-245. \doi{10.1038/hdy.1972.87}
+}
+\seealso{
+\link{plot.probsup}
 }
