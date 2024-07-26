@@ -7,6 +7,7 @@
 
 [![Lifecycle:
 stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
+[![R-CMD-check](https://github.com/saulo-chaves/ProbBreed/actions/workflows/check-release.yaml/badge.svg)](https://github.com/saulo-chaves/ProbBreed/actions/workflows/check-release.yaml)
 [![CRAN
 status](https://www.r-pkg.org/badges/version/ProbBreed)](https://CRAN.R-project.org/package=ProbBreed)
 [![ProbBreed status
@@ -46,8 +47,8 @@ library(ProbBreed)
 ```
 
 Currently, `ProbBreed` has nine available models implemented in the
-`bayes_met` function. See `?bayes_met` for more details. Using the `soy`
-example dataset, a basic usage is as follows:
+`bayes_met` function. See `?bayes_met` for more details. An examples
+using the `soy` example dataset is described below:
 
 ``` r
 model = bayes_met(data = soy,
@@ -89,33 +90,33 @@ components and some posterior predictive checks. Here are them:
 ``` r
 outs$variances
 #>         effect     var      sd naive.se HPD_0.05 HPD_0.95
-#> 1          Gen   3.383   1.283    0.012    1.655    5.758
-#> 2          Loc 246.354 124.591    1.137  115.921  470.127
-#> 3   error_env1  10.077   2.679    0.024    6.418   15.058
-#> 4   error_env2  28.924   7.296    0.067   19.029   42.483
-#> 5   error_env3  11.620   3.372    0.031    7.210   17.970
-#> 6   error_env4  18.458   4.732    0.043   12.092   27.309
-#> 7   error_env5  51.193  12.312    0.112   34.576   73.887
-#> 8   error_env6  15.524   4.085    0.037   10.051   23.073
-#> 9   error_env7  19.385   5.003    0.046   12.723   28.555
-#> 10  error_env8  21.217   5.390    0.049   13.971   31.041
-#> 11  error_env9  14.818   3.862    0.035    9.658   21.890
-#> 12 error_env10  13.633   5.612    0.051    7.024   24.165
-#> 13 error_env11  22.330   9.116    0.083   11.656   39.590
-#> 14 error_env12   7.657   3.377    0.031    3.693   14.020
-#> 15 error_env13  14.604   5.965    0.054    7.650   25.520
-#> 16 error_env14  10.983   4.557    0.042    5.678   19.356
+#> 1          Gen   3.396   1.299    0.012    1.641    5.785
+#> 2          Loc 248.539 127.507    1.164  115.950  481.170
+#> 3   error_env1  10.029   2.728    0.025    6.363   14.965
+#> 4   error_env2  28.849   7.225    0.066   18.944   42.313
+#> 5   error_env3  11.657   3.424    0.031    7.222   18.003
+#> 6   error_env4  18.542   4.805    0.044   12.119   27.472
+#> 7   error_env5  51.517  12.889    0.118   34.229   74.745
+#> 8   error_env6  15.476   4.034    0.037   10.080   23.001
+#> 9   error_env7  19.270   4.841    0.044   12.608   28.188
+#> 10  error_env8  21.256   5.437    0.050   13.962   31.129
+#> 11  error_env9  14.802   3.832    0.035    9.678   21.811
+#> 12 error_env10  13.496   5.583    0.051    6.887   23.748
+#> 13 error_env11  21.969   8.980    0.082   11.698   37.850
+#> 14 error_env12   7.749   3.433    0.031    3.712   14.234
+#> 15 error_env13  14.443   5.877    0.054    7.553   25.375
+#> 16 error_env14  10.795   4.452    0.041    5.597   19.389
 outs$ppcheck
 #>                   Diagnostics
-#> p.val_max              0.9218
-#> p.val_min              0.3498
-#> p.val_median           0.7276
-#> p.val_mean             0.5012
-#> p.val_sd               0.5630
-#> Eff_No_parameters     27.4466
-#> WAIC2               2715.4466
-#> mean_Rhat              1.0002
-#> Eff_sample_size        0.8112
+#> p.val_max              0.9178
+#> p.val_min              0.3604
+#> p.val_median           0.7216
+#> p.val_mean             0.5008
+#> p.val_sd               0.5567
+#> Eff_No_parameters     27.5075
+#> WAIC2               2715.4563
+#> mean_Rhat              1.0003
+#> Eff_sample_size        0.6675
 ```
 
 You can also the `plot` S3 method for some useful visualizations. For
@@ -153,34 +154,34 @@ superior performances across and within environments:
 ``` r
 head(results$across$perfo)
 #>     ID      prob
-#> 36 G36 0.9845833
-#> 9  G09 0.8344167
-#> 20 G20 0.8135833
-#> 38 G38 0.7305833
-#> 31 G31 0.6705000
-#> 1  G01 0.5160000
+#> 36 G36 0.9825833
+#> 9  G09 0.8340833
+#> 20 G20 0.8162500
+#> 38 G38 0.7317500
+#> 31 G31 0.6750000
+#> 1  G01 0.5250833
 head(results$within$perfo$gl)
-#>   gen          E01          E02         E03          E04          E05
-#> 1 G01 0.5160000000 0.5160000000 0.656916667 0.5160000000 0.5160000000
-#> 2 G02 0.0062500000 0.0062500000 0.013916667 0.0062500000 0.0062500000
-#> 3 G03 0.1638333333 0.1638333333 0.247416667 0.1638333333 0.1638333333
-#> 4 G04 0.0138333333 0.0138333333 0.029250000 0.0138333333 0.0138333333
-#> 5 G05 0.0008333333 0.0008333333 0.002583333 0.0008333333 0.0008333333
-#> 6 G06 0.1968333333 0.1968333333 0.290083333 0.1968333333 0.1968333333
-#>            E06          E07          E08          E09       E10       E11
-#> 1 0.5160000000 0.5160000000 0.5160000000 0.5160000000 0.9541667 0.9541667
-#> 2 0.0062500000 0.0062500000 0.0062500000 0.0062500000        NA        NA
-#> 3 0.1638333333 0.1638333333 0.1638333333 0.1638333333        NA        NA
-#> 4 0.0138333333 0.0138333333 0.0138333333 0.0138333333        NA        NA
-#> 5 0.0008333333 0.0008333333 0.0008333333 0.0008333333        NA        NA
-#> 6 0.1968333333 0.1968333333 0.1968333333 0.1968333333        NA        NA
-#>         E12       E13       E14
-#> 1 0.9541667 0.9541667 0.9541667
-#> 2        NA        NA        NA
-#> 3        NA        NA        NA
-#> 4        NA        NA        NA
-#> 5        NA        NA        NA
-#> 6        NA        NA        NA
+#>   gen         E01         E02         E03         E04         E05         E06
+#> 1 G01 0.525083333 0.525083333 0.666333333 0.525083333 0.525083333 0.525083333
+#> 2 G02 0.007833333 0.007833333 0.016333333 0.007833333 0.007833333 0.007833333
+#> 3 G03 0.163333333 0.163333333 0.248666667 0.163333333 0.163333333 0.163333333
+#> 4 G04 0.013750000 0.013750000 0.027000000 0.013750000 0.013750000 0.013750000
+#> 5 G05 0.001083333 0.001083333 0.002583333 0.001083333 0.001083333 0.001083333
+#> 6 G06 0.194500000 0.194500000 0.286833333 0.194500000 0.194500000 0.194500000
+#>           E07         E08         E09       E10       E11       E12       E13
+#> 1 0.525083333 0.525083333 0.525083333 0.9579167 0.9579167 0.9579167 0.9579167
+#> 2 0.007833333 0.007833333 0.007833333        NA        NA        NA        NA
+#> 3 0.163333333 0.163333333 0.163333333        NA        NA        NA        NA
+#> 4 0.013750000 0.013750000 0.013750000        NA        NA        NA        NA
+#> 5 0.001083333 0.001083333 0.001083333        NA        NA        NA        NA
+#> 6 0.194500000 0.194500000 0.194500000        NA        NA        NA        NA
+#>         E14
+#> 1 0.9579167
+#> 2        NA
+#> 3        NA
+#> 4        NA
+#> 5        NA
+#> 6        NA
 ```
 
 The S3 method `plot` is also available for `probsup` objects. Here are
