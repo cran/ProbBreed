@@ -1,11 +1,11 @@
-a96eeef0f275bac44fba1c257784c41c *DESCRIPTION
+21bfa4ed27012fd98dc851dbd87fa64d *DESCRIPTION
 cf87aefa57e721a1bad1c1ae16841348 *NAMESPACE
 981174ba07c3e12172f9cbab9d3690f9 *NEWS.md
 f40ac408c4bd61bc02cc5b526e0de10e *R/ProbBreed-package.R
 098dec802fe714a5fc46eec498538385 *R/bayes_met.R
-e4e428d9d6676bb53920fdfe968157b8 *R/extr_outs.R
+cbfa90df5f69a636dd5a2fcfc8d6c5af *R/extr_outs.R
 d6e70ee5b21aa3907bf10fa485d366bc *R/maize.R
-87589ea8421cefc7d6a4278d3b0da0fa *R/prob_sup.R
+e1295e92c605cf864e0c2ce4029158b8 *R/prob_sup.R
 9f2e1658fe3d1f6aacd9342a865ed34c *R/soy.R
 37598beba87f5d976c6189f29f8ea254 *R/stanmodels.R
 18b040cbbe6a7af1a1b1f6dae0b9237e *README.md
@@ -59,7 +59,7 @@ a7cab8ef3c5fe9c8934939a5546660f4 *man/plot.extr.Rd
 5e356014f0bfb41767c0e8114bae0cef *man/prob_sup.Rd
 2b6f7346ed05af5284e1908e67a91996 *man/soy.Rd
 564c40d0e86bb1e58d039ff240e97b9f *src/Makevars
-caf4cfa219cdc678546e983f706908a4 *src/Makevars.win
+cde134d76d5b8568e9c28c82a0e3f999 *src/Makevars.win
 214b4d80d4cb64a37d8ece1429a9ca78 *src/RcppExports.cpp
 9a7621959eb9f7cc9ef29fcd3104055a *src/stanExports_IBD1.cc
 c6912d0a2c7c0d563ca3f50ab0c5bd0b *src/stanExports_IBD1.h
