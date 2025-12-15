@@ -138,7 +138,7 @@
 ##'
 ##' @references
 ##'
-##' Dias, K. O. G, Santos J. P. R., Krause, M. D., Piepho H. -P., Guimarães, L. J. M.,
+##' Dias, K. O. G, Santos, J. P. R., Krause, M. D., Piepho, H. -P., Guimarães, L. J. M.,
 ##' Pastina, M. M., and Garcia, A. A. F. (2022). Leveraging probability concepts
 ##' for cultivar recommendation in multi-environment trials. \emph{Theoretical and
 ##' Applied Genetics}, 133(2):443-455. \doi{10.1007/s00122-022-04041-y}
@@ -217,6 +217,7 @@ prob_sup = function(extr, int, increase = TRUE, save.df = FALSE, verbose = FALSE
     names(mod$post)[which(names(mod$post) == declared$year)] = "t"
     names(mod$post)[which(names(mod$post) == paste(declared$gen, declared$year, sep = ':'))] = "gt"
   }
+
 
   # Conditions
   if(!all(grepl('[A-Za-z]', data[, gen]))){data[,gen] = paste("G", data[,gen], sep = "_")}
